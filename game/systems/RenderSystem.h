@@ -16,4 +16,5 @@ private:
     void renderProjectiles(World& world, Renderer& renderer, float camX, float camY);
     void renderFogOfWar(World& world, Renderer& renderer, float camX, float camY,
                         int screenW, int screenH);
+    void renderHighlights(World& world, Renderer& renderer, float camX, float camY);
 };

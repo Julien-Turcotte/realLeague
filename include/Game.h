@@ -27,6 +27,7 @@ private:
     void render();
     void spawnInitialEntities();
     void updateCamera();
+    EntityID findEnemyAt(const Vec2& worldPos, int myTeam);
 
     static constexpr int SCREEN_WIDTH  = 1280;
     static constexpr int SCREEN_HEIGHT = 720;
