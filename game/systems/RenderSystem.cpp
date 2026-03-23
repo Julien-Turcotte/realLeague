@@ -41,10 +41,13 @@ void RenderSystem::renderHealthBars(World& world, Renderer& renderer, float camX
         const auto& hp = world.healths[id];
         const auto& tr = world.transforms[id];
 
+        float spriteHalfH = world.renderables.count(id)
+                            ? world.renderables[id].height * 0.5f
+                            : 15.0f; // fallback half-height
         float barW   = 40.0f;
         float barH   = 5.0f;
         float barX   = tr.position.x - barW * 0.5f;
-        float barY   = tr.position.y - 30.0f;
+        float barY   = tr.position.y - spriteHalfH - 10.0f;
         float fillW  = barW * (hp.current / hp.max);
 
         // Background
@@ -72,7 +75,7 @@ void RenderSystem::renderProjectiles(World& world, Renderer& renderer, float cam
 void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
                                    float camX, float camY, int screenW, int screenH) {
     // Draw semi-transparent dark overlay
-    renderer.setColor(0, 0, 0, 160);
+    renderer.setColor(0, 0, 0, 100);
     renderer.drawRect(0, 0, static_cast<float>(screenW), static_cast<float>(screenH));
 
     // Draw visibility circles around friendly entities (team 0 = blue / player)
@@ -87,7 +90,7 @@ void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
         float vr = 300.0f; // visibility radius
 
         // Draw a lighter filled circle (approximate with a rect for simplicity)
-        renderer.setColor(40, 80, 40, 255); // match map grass color
+        renderer.setColor(60, 120, 60, 255); // match map grass color
         float sx = pos.x - camX;
         float sy = pos.y - camY;
         // Draw filled circle using concentric horizontal lines

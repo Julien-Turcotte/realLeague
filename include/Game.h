@@ -51,4 +51,11 @@ private:
     float camX   = 0.0f;
     float camY   = 0.0f;
     bool  running = false;
+
+    // Right-click move indicator animation
+    Vec2  moveIndicatorPos;
+    float moveIndicatorTime = 0.0f;
+    static constexpr float MOVE_INDICATOR_DURATION     = 0.6f;
+    static constexpr float MOVE_INDICATOR_START_RADIUS = 28.0f;
+    static constexpr float MOVE_INDICATOR_END_RADIUS   = 6.0f;
 };

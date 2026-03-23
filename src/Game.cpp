@@ -126,11 +126,24 @@ void Game::update(float dt) {
     collisionSystem.update(world, dt);
     world.flushDestroyQueue();
     updateCamera();
+    if (moveIndicatorTime > 0.0f) moveIndicatorTime -= dt;
 }
 
 void Game::render() {
     renderer.clear(20, 20, 20);
     renderSystem.render(world, renderer, map, ui, camX, camY);
+
+    // Right-click move indicator animation (drawn on top of everything)
+    if (moveIndicatorTime > 0.0f) {
+        float progress = 1.0f - (moveIndicatorTime / MOVE_INDICATOR_DURATION);
+        float radius   = MOVE_INDICATOR_START_RADIUS
+                         - progress * (MOVE_INDICATOR_START_RADIUS - MOVE_INDICATOR_END_RADIUS);
+        int   alpha    = static_cast<int>((moveIndicatorTime / MOVE_INDICATOR_DURATION) * 230.0f);
+        renderer.setColor(50, 255, 100, alpha);
+        renderer.drawWorldCircle(moveIndicatorPos.x, moveIndicatorPos.y, radius,       camX, camY);
+        renderer.drawWorldCircle(moveIndicatorPos.x, moveIndicatorPos.y, radius - 3.0f, camX, camY);
+    }
+
     renderer.present();
 }
 
