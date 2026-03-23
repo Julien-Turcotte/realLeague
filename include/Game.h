@@ -14,6 +14,7 @@
 #include "systems/AISystem.h"
 #include "systems/RenderSystem.h"
 #include "systems/CollisionSystem.h"
+#include "systems/RespawnSystem.h"
 
 class Game {
 public:
@@ -47,6 +48,7 @@ private:
     AISystem        aiSystem;
     RenderSystem    renderSystem;
     CollisionSystem collisionSystem;
+    RespawnSystem   respawnSystem;
 
     float camX   = 0.0f;
     float camY   = 0.0f;

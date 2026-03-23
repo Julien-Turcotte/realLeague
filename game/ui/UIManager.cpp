@@ -1,5 +1,6 @@
 #include "ui/UIManager.h"
 #include "map/Map.h"
+#include <cmath>
 
 // ── Ability bar ───────────────────────────────────────────────────────────────
 
@@ -105,10 +106,67 @@ void UIManager::renderLevelInfo(World& world, EntityID player, Renderer& rendere
     }
 }
 
+// ── Respawn timer ─────────────────────────────────────────────────────────────
+
+void UIManager::renderRespawnTimer(World& world, EntityID player,
+                                    Renderer& renderer, int screenW, int screenH) {
+    if (player == INVALID_ENTITY) return;
+    if (world.respawnComponents.count(player) == 0) return;
+
+    const auto& rc = world.respawnComponents[player];
+
+    // Dark overlay to signal the player is dead
+    renderer.setColor(0, 0, 0, 160);
+    renderer.drawRect(0, 0, static_cast<float>(screenW), static_cast<float>(screenH));
+
+    // Progress bar: shows how much of the respawn time has elapsed
+    constexpr float barW = 300.0f;
+    constexpr float barH =  20.0f;
+    float barX = (static_cast<float>(screenW) - barW) * 0.5f;
+    float barY = static_cast<float>(screenH) * 0.5f - barH * 0.5f + 30.0f;
+
+    // Background
+    renderer.setColor(60, 0, 0, 220);
+    renderer.drawRect(barX, barY, barW, barH);
+
+    // Fill (shrinks as the timer counts down to zero)
+    float fill = (rc.maxTimer > 0.0f) ? (rc.timer / rc.maxTimer) : 0.0f;
+    renderer.setColor(220, 60, 60, 255);
+    renderer.drawRect(barX, barY, barW * fill, barH);
+
+    // Border
+    renderer.setColor(200, 200, 200, 255);
+    renderer.drawRect(barX, barY, barW, barH, false);
+
+    // Individual second ticks along the bar
+    int totalSeconds = static_cast<int>(rc.maxTimer);
+    for (int s = 1; s < totalSeconds; ++s) {
+        float tx = barX + barW * (1.0f - static_cast<float>(s) / rc.maxTimer);
+        renderer.setColor(200, 200, 200, 180);
+        renderer.drawLine(tx, barY, tx, barY + barH);
+    }
+
+    // Small squares above the bar – one per second remaining (capped at 30)
+    int secsLeft = static_cast<int>(std::ceil(rc.timer));
+    if (secsLeft > 30) secsLeft = 30;
+    constexpr float sqW = 8.0f;
+    constexpr float sqH = 8.0f;
+    constexpr float sqSpacing = 2.0f;
+    float totalSqW = static_cast<float>(secsLeft) * (sqW + sqSpacing) - sqSpacing;
+    float sqStartX = (static_cast<float>(screenW) - totalSqW) * 0.5f;
+    float sqY = barY - sqH - 6.0f;
+    for (int i = 0; i < secsLeft; ++i) {
+        float sx = sqStartX + static_cast<float>(i) * (sqW + sqSpacing);
+        renderer.setColor(220, 80, 80, 230);
+        renderer.drawRect(sx, sqY, sqW, sqH);
+    }
+}
+
 // ── Public entry ─────────────────────────────────────────────────────────────
 
 void UIManager::render(World& world, Renderer& renderer, int screenW, int screenH) {
     renderLevelInfo(world, world.playerEntity, renderer);
     renderAbilityBar(world, world.playerEntity, renderer, screenW, screenH);
     renderMinimap(world, renderer, screenW, screenH);
+    renderRespawnTimer(world, world.playerEntity, renderer, screenW, screenH);
 }

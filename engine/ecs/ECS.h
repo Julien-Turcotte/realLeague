@@ -33,6 +33,7 @@ public:
             champions.erase(id);
             minions.erase(id);
             collisions.erase(id);
+            respawnComponents.erase(id);
         }
         toDestroy.clear();
     }
@@ -51,6 +52,7 @@ public:
     std::unordered_map<EntityID, ChampionComponent> champions;
     std::unordered_map<EntityID, MinionComponent> minions;
     std::unordered_map<EntityID, CollisionComponent> collisions;
+    std::unordered_map<EntityID, RespawnComponent> respawnComponents;
 
     std::vector<EntityID> entities;
     std::vector<EntityID> toDestroy;

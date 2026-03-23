@@ -89,6 +89,14 @@ struct ChampionComponent {
     int experience = 0;
     std::array<float, 4> abilityCooldowns = {0, 0, 0, 0};
     std::array<float, 4> abilityMaxCooldowns = {5, 8, 12, 120};
+    int deathCount = 0;
+    Vec2 spawnPosition;
+};
+
+struct RespawnComponent {
+    float timer = 0.0f;       // time remaining until respawn
+    float maxTimer = 0.0f;    // total respawn duration (for UI display)
+    Vec2 spawnPosition;       // world position to teleport to on respawn
 };
 
 struct MinionComponent {

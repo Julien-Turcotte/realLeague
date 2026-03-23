@@ -124,6 +124,7 @@ void Game::update(float dt) {
     combatSystem.update(world, dt);
     abilitySystem.update(world, dt, input, camX, camY);
     collisionSystem.update(world, dt);
+    respawnSystem.update(world, dt);
     world.flushDestroyQueue();
     updateCamera();
     if (moveIndicatorTime > 0.0f) moveIndicatorTime -= dt;
