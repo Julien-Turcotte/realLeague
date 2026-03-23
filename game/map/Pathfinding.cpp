@@ -110,13 +110,13 @@ std::vector<Vec2> Pathfinding::findPath(const Vec2& start, const Vec2& end) cons
 
     // Reconstruct path
     std::vector<Vec2> path;
-    int cx = ex, cy2 = ey;
-    while (!(cx == sx && cy2 == sy)) {
-        path.push_back(gridToWorld(cx, cy2));
-        int i  = idx(cx, cy2);
+    int cx = ex, cy = ey;
+    while (!(cx == sx && cy == sy)) {
+        path.push_back(gridToWorld(cx, cy));
+        int i  = idx(cx, cy);
         int px = parentX[i];
         int py = parentY[i];
-        cx = px; cy2 = py;
+        cx = px; cy = py;
     }
     std::reverse(path.begin(), path.end());
     path.push_back(end);
