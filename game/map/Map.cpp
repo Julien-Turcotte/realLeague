@@ -107,7 +107,7 @@ bool Map::isObstacle(const Vec2& pos, float radius) const {
 
 void Map::render(Renderer& renderer, float camX, float camY) {
     // Background (grass)
-    renderer.setColor(40, 80, 40);
+    renderer.setColor(60, 120, 60);
     renderer.drawWorldRect(0, 0, static_cast<float>(MAP_WIDTH), static_cast<float>(MAP_HEIGHT), camX, camY);
 
     // River band (diagonal blue-gray strip)
