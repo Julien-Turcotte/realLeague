@@ -19,7 +19,7 @@ A minimal MOBA (Multiplayer Online Battle Arena) game inspired by League of Lege
 ## System Requirements
 
 - OS: Ubuntu 20.04 / Debian 11 or newer (or any compatible APT-based distribution)
-- CPU: x86\_64, 2+ cores recommended
+- CPU: x86_64, 2+ cores recommended
 - RAM: 1 GB minimum
 - GPU: Any GPU with OpenGL 2.1+ support (or Mesa software renderer)
 - Disk: ~500 MB free (for build dependencies and compiled output)
@@ -70,7 +70,7 @@ sudo apt install -y \
 ### Package explanations
 
 | Package | Purpose |
-|---|---|
+| --- | --- |
 | `build-essential` | GCC/G++ compiler, `make`, and core build tools |
 | `g++` | C++20-capable GNU C++ compiler |
 | `cmake` | Build system generator |
@@ -148,7 +148,7 @@ The compiled binary will be located at `build/realLeague`.
 ## Controls
 
 | Input | Action |
-|---|---|
+| --- | --- |
 | **Right-click** | Move champion to target location |
 | **Q** | Cast ability 1 (Fireball skillshot) |
 | **W** | Cast ability 2 |
@@ -187,7 +187,7 @@ realLeague/
 ## Development Roadmap
 
 | Phase | Description | Status |
-|---|---|---|
+| --- | --- | --- |
 | Phase 1 | Engine basics: SDL3 window, rendering, input, ECS | ✅ MVP |
 | Phase 2 | Core gameplay: movement, camera, minions, combat | ✅ MVP |
 | Phase 3 | Champions: abilities, cooldowns | ✅ MVP |
