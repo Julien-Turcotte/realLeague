@@ -161,14 +161,14 @@ void RenderSystem::render(World& world, Renderer& renderer, Map& map,
     // Map background
     map.render(renderer, camX, camY);
 
-    // Entities and UI
+    // Fog of war (drawn before entities so entities appear on top)
+    renderFogOfWar(world, renderer, camX, camY,
+                   renderer.getWidth(), renderer.getHeight());
+
+    // Entities and UI (drawn after fog so they are always visible)
     renderEntities(world, renderer, camX, camY);
     renderHealthBars(world, renderer, camX, camY);
     renderProjectiles(world, renderer, camX, camY);
-
-    // Fog of war
-    renderFogOfWar(world, renderer, camX, camY,
-                   renderer.getWidth(), renderer.getHeight());
 
     // Hover and attack-target highlights (drawn after fog so always visible)
     renderHighlights(world, renderer, camX, camY);
