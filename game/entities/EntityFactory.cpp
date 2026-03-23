@@ -6,9 +6,9 @@ EntityID EntityFactory::createPlayerChampion(World& world, const Vec2& pos) {
     world.velocities[id]       = {};
     world.healths[id]          = {500.0f, 500.0f, 10.0f, false};
     world.attacks[id]          = {40.0f, 175.0f, 1.0f, 0.0f, INVALID_ENTITY};
-    world.renderables[id]      = {50, 100, 255, 40.0f, 40.0f};
+    world.renderables[id]      = {50, 100, 255, 24.0f, 24.0f};
     world.teamComponents[id]   = {0};
-    world.collisions[id]       = {20.0f, false};
+    world.collisions[id]       = {12.0f, false};
     world.playerControlled[id] = {};
     world.champions[id]        = {};
     return id;
@@ -20,9 +20,9 @@ EntityID EntityFactory::createBotChampion(World& world, const Vec2& pos) {
     world.velocities[id]     = {};
     world.healths[id]        = {500.0f, 500.0f, 10.0f, false};
     world.attacks[id]        = {40.0f, 175.0f, 1.0f, 0.0f, INVALID_ENTITY};
-    world.renderables[id]    = {255, 50, 50, 40.0f, 40.0f};
+    world.renderables[id]    = {255, 50, 50, 24.0f, 24.0f};
     world.teamComponents[id] = {1};
-    world.collisions[id]     = {20.0f, false};
+    world.collisions[id]     = {12.0f, false};
     world.champions[id]      = {};
     AIComponent ai;
     ai.aggroRange   = 400.0f;
