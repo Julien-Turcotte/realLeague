@@ -83,26 +83,53 @@ void CombatSystem::processAttackers(World& world, float dt) {
 
         atk.attackTimer -= dt;
 
-        // Validate current target
-        if (atk.currentTarget != INVALID_ENTITY) {
-            bool invalid = false;
-            if (world.healths.count(atk.currentTarget) == 0 ||
-                world.healths[atk.currentTarget].isDead)
-                invalid = true;
-            else if (world.transforms.count(atk.currentTarget)) {
-                float d = world.transforms[id].position.distance(
-                              world.transforms[atk.currentTarget].position);
-                if (d > atk.range * 1.2f) invalid = true; // slight leash
+        // If the player set an explicit attack target, honour it
+        bool hasExplicitTarget = false;
+        if (world.playerControlled.count(id)) {
+            auto& pc = world.playerControlled[id];
+            if (pc.attackTarget != INVALID_ENTITY) {
+                EntityID tgt = pc.attackTarget;
+                if (!world.transforms.count(tgt) ||
+                    (world.healths.count(tgt) && world.healths[tgt].isDead)) {
+                    // Target died: clear it so movement/combat fall back to normal
+                    pc.attackTarget    = INVALID_ENTITY;
+                    atk.currentTarget = INVALID_ENTITY;
+                } else {
+                    atk.currentTarget = tgt;
+                    hasExplicitTarget  = true;
+                }
             }
-            if (invalid) atk.currentTarget = INVALID_ENTITY;
         }
 
-        if (atk.currentTarget == INVALID_ENTITY)
-            atk.currentTarget = findNearestEnemy(world, id, atk.range);
+        if (!hasExplicitTarget) {
+            // Validate current auto-acquired target
+            if (atk.currentTarget != INVALID_ENTITY) {
+                bool invalid = false;
+                if (world.healths.count(atk.currentTarget) == 0 ||
+                    world.healths[atk.currentTarget].isDead)
+                    invalid = true;
+                else if (world.transforms.count(atk.currentTarget)) {
+                    float d = world.transforms[id].position.distance(
+                                  world.transforms[atk.currentTarget].position);
+                    if (d > atk.range * 1.2f) invalid = true; // 20 % leash prevents flickering near edge of range
+                }
+                if (invalid) atk.currentTarget = INVALID_ENTITY;
+            }
+
+            if (atk.currentTarget == INVALID_ENTITY)
+                atk.currentTarget = findNearestEnemy(world, id, atk.range);
+        }
 
         if (atk.currentTarget != INVALID_ENTITY && atk.attackTimer <= 0.0f) {
-            dealDamage(world, atk.currentTarget, atk.damage);
-            atk.attackTimer = 1.0f / atk.attackSpeed;
+            // Only strike if the target is within attack range
+            if (world.transforms.count(atk.currentTarget)) {
+                float d = world.transforms[id].position.distance(
+                              world.transforms[atk.currentTarget].position);
+                if (d <= atk.range) {
+                    dealDamage(world, atk.currentTarget, atk.damage);
+                    atk.attackTimer = 1.0f / atk.attackSpeed;
+                }
+            }
         }
     }
 }

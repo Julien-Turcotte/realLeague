@@ -69,19 +69,53 @@ void Game::handleInput() {
         return;
     }
 
-    // Right-click → move player
+    // Update hovered enemy every frame based on current mouse position
+    if (world.playerEntity != INVALID_ENTITY &&
+        world.teamComponents.count(world.playerEntity)) {
+        Vec2 mouseScreen = input.getMousePosition();
+        Vec2 worldPos{mouseScreen.x + camX, mouseScreen.y + camY};
+        int myTeam = world.teamComponents[world.playerEntity].teamId;
+        world.hoveredEnemy = findEnemyAt(worldPos, myTeam);
+    }
+
+    // Right-click → attack enemy or move player
     if (input.isMouseButtonJustPressed(SDL_BUTTON_RIGHT)) {
         if (world.playerEntity != INVALID_ENTITY &&
             world.playerControlled.count(world.playerEntity)) {
             Vec2 mouseScreen = input.getMousePosition();
             Vec2 worldPos{mouseScreen.x + camX, mouseScreen.y + camY};
-            world.playerControlled[world.playerEntity].moveTarget = worldPos;
-            world.playerControlled[world.playerEntity].hasTarget  = true;
-            // Start move indicator animation
-            moveIndicatorPos  = worldPos;
-            moveIndicatorTime = MOVE_INDICATOR_DURATION;
+
+            EntityID enemyAt = world.hoveredEnemy;
+            auto& pc = world.playerControlled[world.playerEntity];
+            if (enemyAt != INVALID_ENTITY) {
+                // Right-clicked on enemy: set as explicit attack target
+                pc.attackTarget = enemyAt;
+                pc.hasTarget    = false;
+            } else {
+                // Right-clicked on empty space: move and clear attack target
+                pc.attackTarget = INVALID_ENTITY;
+                pc.moveTarget   = worldPos;
+                pc.hasTarget    = true;
+            }
         }
     }
+}
+
+EntityID Game::findEnemyAt(const Vec2& worldPos, int myTeam) {
+    for (EntityID id : world.entities) {
+        if (!world.teamComponents.count(id)) continue;
+        if (world.teamComponents[id].teamId == myTeam) continue;
+        if (world.healths.count(id) && world.healths[id].isDead) continue;
+        if (!world.transforms.count(id)) continue;
+        if (!world.renderables.count(id)) continue;
+
+        const auto& tr   = world.transforms[id];
+        const auto& rend = world.renderables[id];
+        float radius = std::max(rend.width, rend.height) * 0.5f;
+        if (worldPos.distance(tr.position) <= radius)
+            return id;
+    }
+    return INVALID_ENTITY;
 }
 
 void Game::update(float dt) {

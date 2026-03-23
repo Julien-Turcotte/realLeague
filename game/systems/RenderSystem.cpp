@@ -1,5 +1,7 @@
 #include "systems/RenderSystem.h"
 #include <SDL3/SDL.h>
+#include <algorithm>
+#include <cmath>
 
 // ── Map ───────────────────────────────────────────────────────────────────────
 
@@ -100,7 +102,59 @@ void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
     SDL_SetRenderDrawBlendMode(renderer.getSDLRenderer(), SDL_BLENDMODE_BLEND);
 }
 
-// ── Main render ───────────────────────────────────────────────────────────────
+// ── Highlights ────────────────────────────────────────────────────────────────
+
+namespace {
+// Scale applied to an entity's bounding box to produce the highlight ring radius
+constexpr float HIGHLIGHT_RADIUS_SCALE = 0.65f;
+
+void drawThickCircle(Renderer& renderer, float cx, float cy, float radius, float camX, float camY) {
+    renderer.drawWorldCircle(cx, cy, radius,     camX, camY);
+    renderer.drawWorldCircle(cx, cy, radius + 1, camX, camY);
+    renderer.drawWorldCircle(cx, cy, radius + 2, camX, camY);
+}
+} // namespace
+
+void RenderSystem::renderHighlights(World& world, Renderer& renderer, float camX, float camY) {
+    // Determine the player's explicit attack target (if any)
+    EntityID attackTarget = INVALID_ENTITY;
+    for (auto& [id, pc] : world.playerControlled) {
+        if (pc.attackTarget != INVALID_ENTITY) {
+            attackTarget = pc.attackTarget;
+            break;
+        }
+    }
+
+    // Draw attack-target ring (red)
+    if (attackTarget != INVALID_ENTITY &&
+        world.transforms.count(attackTarget) &&
+        !(world.healths.count(attackTarget) && world.healths[attackTarget].isDead)) {
+        const auto& tr = world.transforms[attackTarget];
+        float radius = 20.0f;
+        if (world.renderables.count(attackTarget)) {
+            const auto& rend = world.renderables[attackTarget];
+            radius = std::max(rend.width, rend.height) * HIGHLIGHT_RADIUS_SCALE;
+        }
+        renderer.setColor(255, 60, 60, 220);
+        drawThickCircle(renderer, tr.position.x, tr.position.y, radius, camX, camY);
+    }
+
+    // Draw hover ring (yellow) – shown even over the attack target
+    EntityID hovered = world.hoveredEnemy;
+    if (hovered != INVALID_ENTITY &&
+        world.transforms.count(hovered) &&
+        !(world.healths.count(hovered) && world.healths[hovered].isDead)) {
+        const auto& tr = world.transforms[hovered];
+        float radius = 20.0f;
+        if (world.renderables.count(hovered)) {
+            const auto& rend = world.renderables[hovered];
+            radius = std::max(rend.width, rend.height) * HIGHLIGHT_RADIUS_SCALE;
+        }
+        renderer.setColor(255, 230, 0, 220);
+        drawThickCircle(renderer, tr.position.x, tr.position.y, radius, camX, camY);
+    }
+}
+
 
 void RenderSystem::render(World& world, Renderer& renderer, Map& map,
                           UIManager& ui, float camX, float camY) {
@@ -115,6 +169,9 @@ void RenderSystem::render(World& world, Renderer& renderer, Map& map,
     // Fog of war
     renderFogOfWar(world, renderer, camX, camY,
                    renderer.getWidth(), renderer.getHeight());
+
+    // Hover and attack-target highlights (drawn after fog so always visible)
+    renderHighlights(world, renderer, camX, camY);
 
     // UI overlay (drawn in screen space)
     ui.render(world, renderer, renderer.getWidth(), renderer.getHeight());

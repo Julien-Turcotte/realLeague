@@ -60,6 +60,7 @@ struct AIComponent {
 struct PlayerControlled {
     Vec2 moveTarget;
     bool hasTarget = false;
+    EntityID attackTarget = INVALID_ENTITY;
 };
 
 struct TeamComponent {

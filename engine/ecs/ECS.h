@@ -56,4 +56,5 @@ public:
     std::vector<EntityID> toDestroy;
     EntityID nextID = 0;
     EntityID playerEntity = INVALID_ENTITY;
+    EntityID hoveredEnemy = INVALID_ENTITY;
 };

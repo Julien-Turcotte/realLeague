@@ -13,6 +13,38 @@ void MovementSystem::update(World& world, float dt) {
         }
     }
 
+    // Chase explicit attack targets: move toward enemy until within attack range
+    for (auto& [id, pc] : world.playerControlled) {
+        if (pc.attackTarget == INVALID_ENTITY) continue;
+        if (world.velocities.count(id) == 0) continue;
+        if (world.transforms.count(id) == 0) continue;
+        if (world.attacks.count(id) == 0) continue;
+
+        EntityID tgt = pc.attackTarget;
+
+        // Invalidate target if it died or disappeared
+        if (!world.transforms.count(tgt) ||
+            (world.healths.count(tgt) && world.healths[tgt].isDead)) {
+            pc.attackTarget = INVALID_ENTITY;
+            continue;
+        }
+
+        const Vec2& myPos  = world.transforms[id].position;
+        const Vec2& tgtPos = world.transforms[tgt].position;
+        float dist  = myPos.distance(tgtPos);
+        float range = world.attacks[id].range;
+
+        auto& vel = world.velocities[id];
+        if (dist > range) {
+            // Move toward the enemy
+            vel.hasTarget = true;
+            vel.target    = tgtPos;
+        } else {
+            // In range: stop moving so the combat system can attack
+            vel.hasTarget = false;
+        }
+    }
+
     // Move projectiles (they use velocity.velocity directly)
     for (auto& [id, proj] : world.projectiles) {
         if (world.transforms.count(id) == 0) continue;
