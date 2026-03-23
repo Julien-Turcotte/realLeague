@@ -88,7 +88,7 @@ void Renderer::drawWorldLine(float x1, float y1, float x2, float y2, float camX,
     drawLine(x1 - camX, y1 - camY, x2 - camX, y2 - camY);
 }
 
-void Renderer::drawFogOverlay(float /*camX*/, float /*camY*/, int screenW, int screenH) {
+void Renderer::drawFogOverlay(int screenW, int screenH) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 160);
     SDL_FRect full{0, 0, static_cast<float>(screenW), static_cast<float>(screenH)};
     SDL_RenderFillRect(renderer, &full);

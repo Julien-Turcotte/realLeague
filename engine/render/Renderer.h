@@ -19,8 +19,8 @@ public:
     void drawWorldCircle(float cx, float cy, float radius, float camX, float camY);
     void drawWorldLine(float x1, float y1, float x2, float y2, float camX, float camY);
 
-    // Fog of war overlay
-    void drawFogOverlay(float camX, float camY, int screenW, int screenH);
+    // Fog of war overlay (drawn in screen space, no camera offset needed)
+    void drawFogOverlay(int screenW, int screenH);
 
     SDL_Renderer* getSDLRenderer() { return renderer; }
     SDL_Window* getWindow() { return window; }
