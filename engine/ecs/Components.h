@@ -82,6 +82,7 @@ struct ProjectileComponent {
     int ownerTeam = 0;
     EntityID owner = INVALID_ENTITY;
     float lifetime = 3.0f;
+    EntityID targetEntity = INVALID_ENTITY; // homing target (INVALID_ENTITY = straight shot)
 };
 
 struct ChampionComponent {

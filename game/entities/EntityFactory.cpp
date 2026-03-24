@@ -78,18 +78,20 @@ EntityID EntityFactory::createTower(World& world, int teamId, const Vec2& pos) {
 }
 
 EntityID EntityFactory::createFireball(World& world, const Vec2& pos, const Vec2& dir,
-                                        float damage, int ownerTeam, EntityID owner) {
+                                        float damage, int ownerTeam, EntityID owner,
+                                        EntityID targetEntity) {
     EntityID id = world.createEntity();
     world.transforms[id]  = {pos, 0.0f};
     world.renderables[id] = {255, 220, 0, 12.0f, 12.0f};
     world.collisions[id]  = {6.0f, false};
     ProjectileComponent proj;
-    proj.direction = dir.normalized();
-    proj.speed     = 400.0f;
-    proj.damage    = damage;
-    proj.ownerTeam = ownerTeam;
-    proj.owner     = owner;
-    proj.lifetime  = 3.0f;
+    proj.direction    = dir.normalized();
+    proj.speed        = 400.0f;
+    proj.damage       = damage;
+    proj.ownerTeam    = ownerTeam;
+    proj.owner        = owner;
+    proj.lifetime     = 3.0f;
+    proj.targetEntity = targetEntity;
     world.projectiles[id] = proj;
     return id;
 }
