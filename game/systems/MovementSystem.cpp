@@ -49,6 +49,17 @@ void MovementSystem::update(World& world, float dt) {
     for (auto& [id, proj] : world.projectiles) {
         if (world.transforms.count(id) == 0) continue;
         auto& tr = world.transforms[id];
+
+        // Steer homing projectile toward its target
+        if (proj.targetEntity != INVALID_ENTITY &&
+            world.transforms.count(proj.targetEntity) &&
+            world.healths.count(proj.targetEntity) &&
+            !world.healths[proj.targetEntity].isDead)
+        {
+            Vec2 toTarget = world.transforms[proj.targetEntity].position - tr.position;
+            proj.direction = toTarget.normalized();
+        }
+
         tr.position += proj.direction * (proj.speed * dt);
 
         // Tick lifetime

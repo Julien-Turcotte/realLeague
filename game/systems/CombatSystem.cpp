@@ -1,4 +1,5 @@
 #include "systems/CombatSystem.h"
+#include "entities/EntityFactory.h"
 #include <algorithm>
 #include <cmath>
 
@@ -121,12 +122,20 @@ void CombatSystem::processAttackers(World& world, float dt) {
         }
 
         if (atk.currentTarget != INVALID_ENTITY && atk.attackTimer <= 0.0f) {
-            // Only strike if the target is within attack range
-            if (world.transforms.count(atk.currentTarget)) {
+            // Only fire if the target is within attack range
+            if (world.transforms.count(atk.currentTarget) &&
+                world.teamComponents.count(id)) {
                 float d = world.transforms[id].position.distance(
                               world.transforms[atk.currentTarget].position);
                 if (d <= atk.range) {
-                    dealDamage(world, atk.currentTarget, atk.damage);
+                    // Spawn a homing projectile toward the target
+                    Vec2 origin    = world.transforms[id].position;
+                    Vec2 targetPos = world.transforms[atk.currentTarget].position;
+                    Vec2 dir       = (targetPos - origin).normalized();
+                    int  team      = world.teamComponents[id].teamId;
+                    EntityFactory::createFireball(world, origin, dir,
+                                                  atk.damage, team, id,
+                                                  atk.currentTarget);
                     atk.attackTimer = 1.0f / atk.attackSpeed;
                 }
             }
