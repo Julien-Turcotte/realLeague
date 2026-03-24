@@ -2,6 +2,18 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+
+// Simple fast xorshift PRNG for small per-frame randomness (faster than rand())
+static uint32_t fast_rand_state = 2463534242u;
+static inline uint32_t fast_rand() {
+    uint32_t x = fast_rand_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    fast_rand_state = x;
+    return x;
+}
 
 // ── Map ───────────────────────────────────────────────────────────────────────
 
@@ -21,11 +33,25 @@ void RenderSystem::renderEntities(World& world, Renderer& renderer, float camX, 
         const auto& rend = world.renderables[id];
         const auto& tr   = world.transforms[id];
 
+        // Use actual current velocity magnitude for squash/stretch (better feedback)
+        float scale = 1.0f;
+        if (world.velocities.count(id)) {
+            const auto& vel = world.velocities[id];
+            float vmag = vel.velocity.length(); // actual movement speed
+            // Map vmag (0 -> max speed) into a small scale factor
+            float maxSpeed = std::max(1.0f, vel.speed);
+            float t = std::min(1.0f, vmag / maxSpeed);
+            scale = 1.0f + t * 0.25f; // up to +25% stretch
+        }
+
+        float w = rend.width * scale;
+        float h = rend.height * (1.0f / scale);
+
         renderer.setColor(rend.colorR, rend.colorG, rend.colorB);
         renderer.drawWorldRect(
-            tr.position.x - rend.width  * 0.5f,
-            tr.position.y - rend.height * 0.5f,
-            rend.width, rend.height, camX, camY);
+            tr.position.x - w * 0.5f,
+            tr.position.y - h * 0.5f,
+            w, h, camX, camY);
     }
 }
 
@@ -65,13 +91,23 @@ void RenderSystem::renderProjectiles(World& world, Renderer& renderer, float cam
     for (auto& [id, proj] : world.projectiles) {
         if (world.transforms.count(id) == 0) continue;
         const auto& tr = world.transforms[id];
-        // Bright orange-yellow fireball with a larger glow ring
-        renderer.setColor(255, 140, 0, 200);
+
+        // Trail: older entries first -> draw with increasing transparency
+        int steps = static_cast<int>(proj.trail.size());
+        for (int i = 0; i < steps; ++i) {
+            float t = (steps <= 1) ? 0.0f : static_cast<float>(i) / static_cast<float>(steps - 1);
+            int alpha = static_cast<int>((t * 0.6f + 0.2f) * 180.0f); // trailing fade
+            renderer.setColor(255, 140, 0, alpha);
+            renderer.drawWorldCircle(proj.trail[i].x, proj.trail[i].y, 6.0f * (1.0f - t), camX, camY);
+        }
+
+        // Core fireball (glow + core)
+        renderer.setColor(255, 180, 50, 220);
         renderer.drawWorldCircle(tr.position.x, tr.position.y, 14.0f, camX, camY);
         renderer.setColor(255, 220, 0, 255);
-        renderer.drawWorldCircle(tr.position.x, tr.position.y, 10.0f, camX, camY);
-        renderer.setColor(255, 255, 180, 255);
-        renderer.drawWorldCircle(tr.position.x, tr.position.y,  5.0f, camX, camY);
+        renderer.drawWorldCircle(tr.position.x, tr.position.y, 9.0f, camX, camY);
+        renderer.setColor(255, 255, 200, 255);
+        renderer.drawWorldCircle(tr.position.x, tr.position.y, 4.0f, camX, camY);
     }
 }
 
@@ -105,11 +141,11 @@ void RenderSystem::renderVfx(World& world, Renderer& renderer, float camX, float
 void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
                                    float camX, float camY, int screenW, int screenH) {
     // Draw semi-transparent dark overlay
-    renderer.setColor(0, 0, 0, 100);
+    renderer.setColor(0, 0, 0, 160);
     renderer.drawRect(0, 0, static_cast<float>(screenW), static_cast<float>(screenH));
 
     // Draw visibility circles around friendly entities (team 0 = blue / player)
-    SDL_SetRenderDrawBlendMode(renderer.getSDLRenderer(), SDL_BLENDMODE_NONE);
+    // Optimized: draw a few concentric filled circles per unit instead of per-scanline loops.
     for (EntityID id : world.entities) {
         if (world.teamComponents.count(id) == 0) continue;
         if (world.teamComponents[id].teamId != 0) continue;
@@ -119,17 +155,22 @@ void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
         const Vec2& pos = world.transforms[id].position;
         float vr = 300.0f; // visibility radius
 
-        // Draw a filled circle to reveal the map (match new dark jungle background)
-        renderer.setColor(22, 38, 28, 255); // match map jungle color
-        float sx = pos.x - camX;
-        float sy = pos.y - camY;
-        // Draw filled circle using concentric horizontal lines
-        for (float dy = -vr; dy <= vr; dy += 1.0f) {
-            float dx = std::sqrt(vr * vr - dy * dy);
-            renderer.drawLine(sx - dx, sy + dy, sx + dx, sy + dy);
+        // Draw a set of concentric rings from outer (low alpha) to inner (clearer)
+        // We'll draw about 6 rings to approximate a soft edge.
+        int rings = 6;
+        for (int r = rings; r >= 0; --r) {
+            float frac = static_cast<float>(r) / static_cast<float>(rings);
+            float radius = vr * frac;
+            int alpha = static_cast<int>((1.0f - frac) * 200.0f); // inner more visible
+            if (alpha <= 0) continue;
+            // Use map-like reveal color (lighter) to simulate "clearing" the fog
+            renderer.setColor(22, 38, 28, 255 - alpha); // blend toward map color
+            renderer.drawWorldCircle(pos.x, pos.y, radius, camX, camY);
         }
+
+        // Inner core: more revealed (draw a small filled circle)
+        renderer.setColor(22, 38, 28, 0); // no overlay (transparent) -- approximate by thin rings already drawn
     }
-    SDL_SetRenderDrawBlendMode(renderer.getSDLRenderer(), SDL_BLENDMODE_BLEND);
 }
 
 // ── Highlights ────────────────────────────────────────────────────────────────
@@ -184,7 +225,6 @@ void RenderSystem::renderHighlights(World& world, Renderer& renderer, float camX
         drawThickCircle(renderer, tr.position.x, tr.position.y, radius, camX, camY);
     }
 }
-
 
 void RenderSystem::render(World& world, Renderer& renderer, Map& map,
                           UIManager& ui, float camX, float camY) {

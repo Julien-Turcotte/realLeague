@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <vector>
 #include "Vec2.h"
 
 using EntityID = int;
@@ -15,6 +16,10 @@ struct Velocity {
     float speed = 150.0f;
     bool hasTarget = false;
     Vec2 target;
+
+    // New: smooth acceleration for nicer movement (units per second^2)
+    float accel = 1200.0f;    // how fast velocity approaches desired velocity
+    float decel = 1600.0f;    // how fast velocity slows to zero when no target
 };
 
 struct Health {
@@ -82,7 +87,8 @@ struct ProjectileComponent {
     int ownerTeam = 0;
     EntityID owner = INVALID_ENTITY;
     float lifetime = 3.0f;
-    EntityID targetEntity = INVALID_ENTITY; // homing target (INVALID_ENTITY = straight shot)
+    EntityID targetEntity = INVALID_ENTITY; // homing target
+    std::vector<Vec2> trail; // recent positions for trail rendering
 };
 
 struct ChampionComponent {
@@ -120,4 +126,14 @@ struct VfxComponent {
     int   colorR     = 255;
     int   colorG     = 255;
     int   colorB     = 255;
+};
+
+// New: floating damage text
+struct FloatingText {
+    std::string text;
+    Vec2 position;       // world position
+    Vec2 velocity;       // e.g., upward motion
+    float remaining = 0.8f;
+    float duration  = 0.8f;
+    int colorR = 255, colorG = 220, colorB = 100;
 };

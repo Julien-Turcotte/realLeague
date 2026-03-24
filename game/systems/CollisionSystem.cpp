@@ -36,6 +36,37 @@ void CollisionSystem::update(World& world, float /*dt*/) {
                 if (actual < 1.0f) actual = 1.0f;
                 hp.current -= actual;
                 if (hp.current <= 0.0f) { hp.current = 0.0f; hp.isDead = true; }
+
+                // Spawn hit VFX and trigger screen shake
+                // small flash
+                EntityID vfx = EntityFactory::createVfxFlash(world, world.transforms[eid].position, 18.0f, 0.25f, 255, 140, 60);
+                (void)vfx;
+                // light ring
+                EntityFactory::createVfxRing(world, world.transforms[eid].position, 36.0f, 0.35f, 255, 200, 120);
+
+                // screen shake scaled by damage
+                world.screenShakeTime = std::max(world.screenShakeTime, 0.25f);
+                world.screenShakeIntensity = std::max(world.screenShakeIntensity, std::min(12.0f, proj.damage * 0.08f));
+
+                // NEW: brief hit-stop (micro-freeze) for strong tactile feedback
+                // duration tuned small (e.g., 0.04–0.08s)
+                float hitStopDur = std::min(0.08f, 0.01f + proj.damage * 0.0025f);
+                world.hitStopTime = std::max(world.hitStopTime, hitStopDur);
+
+                // NEW: set a short per-entity hit pulse for visual scaling
+                constexpr float PULSE_DURATION = 0.12f;
+                world.hitPulses[eid] = PULSE_DURATION;
+
+                // NEW: spawn floating damage text
+                FloatingText ft;
+                ft.text = std::to_string(static_cast<int>(std::round(actual)));
+                ft.position = world.transforms[eid].position;
+                ft.velocity = Vec2{0.0f, -40.0f}; // move up 40 units/sec
+                ft.duration = 0.8f;
+                ft.remaining = ft.duration;
+                ft.colorR = 255; ft.colorG = 220; ft.colorB = 100;
+                world.floatingTexts.push_back(std::move(ft));
+
                 projToDestroy.push_back(projId);
                 break;
             }

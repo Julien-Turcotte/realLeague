@@ -56,9 +56,22 @@ public:
     std::unordered_map<EntityID, RespawnComponent> respawnComponents;
     std::unordered_map<EntityID, VfxComponent> vfxComponents;
 
+    // Per-entity short visual pulse when hit (seconds remaining)
+    std::unordered_map<EntityID, float> hitPulses;
+
+    // Floating damage texts (transient)
+    std::vector<FloatingText> floatingTexts;
+
     std::vector<EntityID> entities;
     std::vector<EntityID> toDestroy;
     EntityID nextID = 0;
     EntityID playerEntity = INVALID_ENTITY;
     EntityID hoveredEnemy = INVALID_ENTITY;
+
+    // Global effects / UI state
+    float screenShakeTime = 0.0f;
+    float screenShakeIntensity = 0.0f;
+
+    // New: very short global pause on hit (seconds). When >0, simulation updates are suppressed.
+    float hitStopTime = 0.0f;
 };

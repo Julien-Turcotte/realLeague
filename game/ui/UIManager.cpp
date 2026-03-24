@@ -164,9 +164,53 @@ void UIManager::renderRespawnTimer(World& world, EntityID player,
 
 // ── Public entry ─────────────────────────────────────────────────────────────
 
-void UIManager::render(World& world, Renderer& renderer, int screenW, int screenH) {
+void UIManager::render(World& world, Renderer& renderer, int screenW, int screenH, float dt, float camX, float camY) {
     renderLevelInfo(world, world.playerEntity, renderer);
     renderAbilityBar(world, world.playerEntity, renderer, screenW, screenH);
     renderMinimap(world, renderer, screenW, screenH);
     renderRespawnTimer(world, world.playerEntity, renderer, screenW, screenH);
+    renderHealthBars(world, renderer, camX, camY, dt);
+}
+
+// ── Health bars ───────────────────────────────────────────────────────────────
+
+void UIManager::renderHealthBars(World& world, Renderer& renderer, float camX, float camY, float dt) {
+    for (EntityID id : world.entities) {
+        if (world.healths.count(id) == 0) continue;
+        if (world.transforms.count(id) == 0) continue;
+        if (world.healths[id].isDead) continue;
+        if (world.projectiles.count(id)) continue;
+
+        const auto& hp = world.healths[id];
+        const auto& tr = world.transforms[id];
+
+        // Smooth displayed health
+        float& disp = displayedHealth[id];
+        if (disp <= 0.0f) disp = hp.current; // initialize
+        float speed = 6.0f; // higher = snappier
+        float alpha = std::min(1.0f, speed * dt);
+        disp = disp + (hp.current - disp) * alpha; // use dt for consistent smoothing
+
+        float spriteHalfH = world.renderables.count(id)
+                            ? world.renderables[id].height * 0.5f
+                            : 15.0f; // fallback half-height
+        float barW   = 40.0f;
+        float barH   = 5.0f;
+        float barX   = tr.position.x - barW * 0.5f;
+        float barY   = tr.position.y - spriteHalfH - 10.0f;
+        float fillW  = barW * (disp / hp.max);
+
+        // Background
+        renderer.setColor(40, 20, 20, 200);
+        renderer.drawWorldRect(barX, barY, barW, barH, camX, camY);
+        // Smooth gradient-like fill (two tones)
+        renderer.setColor(200, 80, 80, 255);
+        renderer.drawWorldRect(barX, barY, fillW * 0.6f, barH, camX, camY);
+        renderer.setColor(220, 180, 80, 220);
+        renderer.drawWorldRect(barX + fillW * 0.6f, barY, std::max(0.0f, fillW - fillW * 0.6f), barH, camX, camY);
+
+        // Border
+        renderer.setColor(0, 0, 0, 180);
+        renderer.drawWorldRect(barX - 1, barY - 1, barW + 2, barH + 2, camX, camY, false);
+    }
 }

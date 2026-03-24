@@ -62,6 +62,12 @@ void MovementSystem::update(World& world, float dt) {
 
         tr.position += proj.direction * (proj.speed * dt);
 
+        // Trail: push current position, keep last N samples
+        proj.trail.push_back(tr.position);
+        const std::size_t MAX_TRAIL = 8;
+        if (proj.trail.size() > MAX_TRAIL)
+            proj.trail.erase(proj.trail.begin(), proj.trail.end() - MAX_TRAIL);
+
         // Tick lifetime
         proj.lifetime -= dt;
         if (proj.lifetime <= 0.0f)
@@ -76,23 +82,42 @@ void MovementSystem::update(World& world, float dt) {
 
         auto& tr = world.transforms[id];
 
+        // Determine desired velocity
+        Vec2 desired = {0.0f, 0.0f};
         if (vel.hasTarget) {
             Vec2 diff = vel.target - tr.position;
             float dist = diff.length();
             if (dist < 5.0f) {
                 vel.hasTarget  = false;
-                vel.velocity   = {0, 0};
+                desired = {0.0f, 0.0f};
                 tr.position    = vel.target;
                 // Clear player move target too
                 if (world.playerControlled.count(id))
                     world.playerControlled[id].hasTarget = false;
             } else {
                 Vec2 dir = diff / dist;
-                tr.position += dir * (vel.speed * dt);
+                desired = dir * vel.speed;
             }
         } else {
-            tr.position += vel.velocity * dt;
+            // if no target, want to come to rest
+            desired = {0.0f, 0.0f};
         }
+
+        // Smoothly accelerate current velocity toward desired
+        Vec2 delta = desired - vel.velocity;
+        float deltaLen = delta.length();
+        if (deltaLen > 1e-6f) {
+            // Choose appropriate acceleration (accel when speeding up, decel when slowing)
+            float useAccel = (desired.length() > vel.velocity.length()) ? vel.accel : vel.decel;
+            Vec2 change = delta.normalized() * (useAccel * dt);
+            if (change.length() > deltaLen) change = delta; // don't overshoot
+            vel.velocity += change;
+        } else {
+            vel.velocity = desired;
+        }
+
+        // Apply movement
+        tr.position += vel.velocity * dt;
 
         // Clamp to map bounds
         tr.position.x = std::clamp(tr.position.x, 0.0f, static_cast<float>(MAP_WIDTH));

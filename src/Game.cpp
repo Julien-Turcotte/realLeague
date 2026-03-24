@@ -55,6 +55,18 @@ void Game::updateCamera() {
     camY = pos.y - static_cast<float>(SCREEN_HEIGHT) * 0.5f;
     camX = std::clamp(camX, 0.0f, static_cast<float>(MAP_WIDTH  - SCREEN_WIDTH));
     camY = std::clamp(camY, 0.0f, static_cast<float>(MAP_HEIGHT - SCREEN_HEIGHT));
+
+    // Screen shake from world state
+    if (world.screenShakeTime > 0.0f) {
+        world.screenShakeTime = std::max(0.0f, world.screenShakeTime - timer.getDeltaTime());
+        float intensity = world.screenShakeIntensity * (world.screenShakeTime / 0.25f);
+        // simple random offset
+        float ox = (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * intensity;
+        float oy = (static_cast<float>(rand()) / RAND_MAX * 2.0f - 1.0f) * intensity;
+        camX += ox;
+        camY += oy;
+        if (world.screenShakeTime <= 0.0f) world.screenShakeIntensity = 0.0f;
+    }
 }
 
 void Game::handleInput() {
@@ -153,8 +165,17 @@ void Game::run() {
     running = true;
     while (running) {
         float dt = timer.tick();
+
         handleInput();
-        update(dt);
+
+        // If a hit-stop is active, consume its time and skip simulation update to create a micro-freeze.
+        float simDt = dt;
+        if (world.hitStopTime > 0.0f) {
+            world.hitStopTime = std::max(0.0f, world.hitStopTime - dt);
+            simDt = 0.0f;
+        }
+
+        update(simDt);
         render();
     }
 }

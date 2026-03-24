@@ -7,7 +7,7 @@
 class RenderSystem {
 public:
     void render(World& world, Renderer& renderer, Map& map,
-                UIManager& ui, float camX, float camY);
+                UIManager& ui, float camX, float camY, float dt);
 
 private:
     void renderMap(Renderer& renderer, Map& map, float camX, float camY);
