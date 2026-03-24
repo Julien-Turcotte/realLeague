@@ -3,6 +3,16 @@
 #include <algorithm>
 #include <cmath>
 
+// ── Init / Shutdown ───────────────────────────────────────────────────────────
+
+void RenderSystem::init(Renderer& renderer) {
+    m_sprites.init(renderer.getSDLRenderer());
+}
+
+void RenderSystem::shutdown() {
+    m_sprites.shutdown();
+}
+
 // ── Map ───────────────────────────────────────────────────────────────────────
 
 void RenderSystem::renderMap(Renderer& renderer, Map& map, float camX, float camY) {
@@ -21,11 +31,20 @@ void RenderSystem::renderEntities(World& world, Renderer& renderer, float camX, 
         const auto& rend = world.renderables[id];
         const auto& tr   = world.transforms[id];
 
-        renderer.setColor(rend.colorR, rend.colorG, rend.colorB);
-        renderer.drawWorldRect(
-            tr.position.x - rend.width  * 0.5f,
-            tr.position.y - rend.height * 0.5f,
-            rend.width, rend.height, camX, camY);
+        SDL_Texture* tex = m_sprites.get(rend.spriteType);
+        if (tex) {
+            renderer.drawWorldSprite(tex,
+                tr.position.x, tr.position.y,
+                rend.width, rend.height,
+                camX, camY);
+        } else {
+            // Fallback: plain coloured rectangle
+            renderer.setColor(rend.colorR, rend.colorG, rend.colorB);
+            renderer.drawWorldRect(
+                tr.position.x - rend.width  * 0.5f,
+                tr.position.y - rend.height * 0.5f,
+                rend.width, rend.height, camX, camY);
+        }
     }
 }
 
@@ -62,11 +81,18 @@ void RenderSystem::renderHealthBars(World& world, Renderer& renderer, float camX
 // ── Projectiles ───────────────────────────────────────────────────────────────
 
 void RenderSystem::renderProjectiles(World& world, Renderer& renderer, float camX, float camY) {
+    SDL_Texture* fireTex = m_sprites.get(SpriteType::Fireball);
     for (auto& [id, proj] : world.projectiles) {
         if (world.transforms.count(id) == 0) continue;
         const auto& tr = world.transforms[id];
-        renderer.setColor(255, 220, 0);
-        renderer.drawWorldCircle(tr.position.x, tr.position.y, 6.0f, camX, camY);
+        if (fireTex) {
+            renderer.drawWorldSprite(fireTex,
+                tr.position.x, tr.position.y,
+                12.0f, 12.0f, camX, camY);
+        } else {
+            renderer.setColor(255, 220, 0);
+            renderer.drawWorldCircle(tr.position.x, tr.position.y, 6.0f, camX, camY);
+        }
     }
 }
 

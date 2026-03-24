@@ -6,7 +6,7 @@ EntityID EntityFactory::createPlayerChampion(World& world, const Vec2& pos) {
     world.velocities[id]       = {};
     world.healths[id]          = {500.0f, 500.0f, 10.0f, false};
     world.attacks[id]          = {40.0f, 175.0f, 1.0f, 0.0f, INVALID_ENTITY};
-    world.renderables[id]      = {50, 100, 255, 24.0f, 24.0f};
+    world.renderables[id]      = {50, 100, 255, 24.0f, 24.0f, SpriteType::PlayerChampion};
     world.teamComponents[id]   = {0};
     world.collisions[id]       = {12.0f, false};
     world.playerControlled[id] = {};
@@ -22,7 +22,7 @@ EntityID EntityFactory::createBotChampion(World& world, const Vec2& pos) {
     world.velocities[id]     = {};
     world.healths[id]        = {500.0f, 500.0f, 10.0f, false};
     world.attacks[id]        = {40.0f, 175.0f, 1.0f, 0.0f, INVALID_ENTITY};
-    world.renderables[id]    = {255, 50, 50, 24.0f, 24.0f};
+    world.renderables[id]    = {255, 50, 50, 24.0f, 24.0f, SpriteType::BotChampion};
     world.teamComponents[id] = {1};
     world.collisions[id]     = {12.0f, false};
     ChampionComponent champ;
@@ -45,9 +45,9 @@ EntityID EntityFactory::createMinion(World& world, int teamId, int laneIndex, co
     world.healths[id]        = {100.0f, 100.0f, 5.0f, false};
     world.attacks[id]        = {15.0f, 120.0f, 0.8f, 0.0f, INVALID_ENTITY};
     if (teamId == 0)
-        world.renderables[id] = {100, 150, 255, 20.0f, 20.0f};
+        world.renderables[id] = {100, 150, 255, 20.0f, 20.0f, SpriteType::BlueMinion};
     else
-        world.renderables[id] = {255, 100, 100, 20.0f, 20.0f};
+        world.renderables[id] = {255, 100, 100, 20.0f, 20.0f, SpriteType::RedMinion};
     world.teamComponents[id] = {teamId};
     world.collisions[id]     = {10.0f, false};
     MinionComponent mc;
@@ -68,9 +68,9 @@ EntityID EntityFactory::createTower(World& world, int teamId, const Vec2& pos) {
     world.transforms[id]     = {pos, 0.0f};
     world.healths[id]        = {1500.0f, 1500.0f, 20.0f, false};
     if (teamId == 0)
-        world.renderables[id] = {0, 0, 200, 50.0f, 80.0f};
+        world.renderables[id] = {0, 0, 200, 50.0f, 80.0f, SpriteType::BlueTower};
     else
-        world.renderables[id] = {200, 0, 0, 50.0f, 80.0f};
+        world.renderables[id] = {200, 0, 0, 50.0f, 80.0f, SpriteType::RedTower};
     world.teamComponents[id] = {teamId};
     world.collisions[id]     = {25.0f, true};
     world.towers[id]         = {};
@@ -81,7 +81,7 @@ EntityID EntityFactory::createFireball(World& world, const Vec2& pos, const Vec2
                                         float damage, int ownerTeam, EntityID owner) {
     EntityID id = world.createEntity();
     world.transforms[id]  = {pos, 0.0f};
-    world.renderables[id] = {255, 220, 0, 12.0f, 12.0f};
+    world.renderables[id] = {255, 220, 0, 12.0f, 12.0f, SpriteType::Fireball};
     world.collisions[id]  = {6.0f, false};
     ProjectileComponent proj;
     proj.direction = dir.normalized();

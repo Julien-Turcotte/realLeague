@@ -5,6 +5,18 @@
 using EntityID = int;
 constexpr EntityID INVALID_ENTITY = -1;
 
+// Identifies which pixel-art sprite to use when rendering an entity.
+enum class SpriteType : int {
+    None = 0,
+    PlayerChampion,
+    BotChampion,
+    BlueMinion,
+    RedMinion,
+    BlueTower,
+    RedTower,
+    Fireball,
+};
+
 struct Transform {
     Vec2 position;
     float rotation = 0.0f;
@@ -45,6 +57,7 @@ struct Renderable {
     int colorB = 255;
     float width = 30.0f;
     float height = 30.0f;
+    SpriteType spriteType = SpriteType::None;
 };
 
 struct AIComponent {

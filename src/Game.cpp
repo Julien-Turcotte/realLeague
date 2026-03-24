@@ -18,6 +18,7 @@ bool Game::init() {
     audio.init();
     map.init();
     pathfinding.init(MAP_WIDTH, MAP_HEIGHT, 100);
+    renderSystem.init(renderer);
 
     spawnInitialEntities();
     return true;
@@ -160,6 +161,7 @@ void Game::run() {
 }
 
 void Game::shutdown() {
+    renderSystem.shutdown();
     audio.shutdown();
     renderer.shutdown();
     SDL_Quit();
