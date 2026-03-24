@@ -15,7 +15,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL3)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(SDL2TTF REQUIRED SDL2_ttf)
+pkg_check_modules(SDL2TTF QUIET SDL2_ttf)
 
 file(GLOB_RECURSE ENGINE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
@@ -42,7 +42,9 @@ target_include_directories(realLeague PRIVATE
     ${SDL2TTF_INCLUDE_DIRS}
 )
 
-target_link_libraries(realLeague PRIVATE SDL3::SDL3 ${SDL2TTF_LIBRARIES})
+if(SDL2TTF_FOUND)
+    target_link_libraries(realLeague PRIVATE ${SDL2TTF_LIBRARIES})
+endif()
 
 if(MSVC)
     target_compile_options(realLeague PRIVATE /W4)

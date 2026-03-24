@@ -2,7 +2,16 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include "Vec2.h"
-#include <SDL_ttf.h>
+
+#if __has_include(<SDL_ttf.h>)
+#  include <SDL_ttf.h>
+#  define REALLEAGUE_HAS_TTF 1
+#elif __has_include(<SDL3_ttf/SDL_ttf.h>)
+#  include <SDL3_ttf/SDL_ttf.h>
+#  define REALLEAGUE_HAS_TTF 1
+#else
+#  define REALLEAGUE_HAS_TTF 0
+#endif
 
 class Renderer {
 public:
@@ -36,7 +45,10 @@ private:
     SDL_Renderer* renderer = nullptr;
     int width = 1280;
     int height = 720;
+#if REALLEAGUE_HAS_TTF
     TTF_Font* font = nullptr;
-
+#else
+    void* font = nullptr; // dummy member to keep class layout; unused
+#endif
     void drawCirclePoints(int cx, int cy, int x, int y);
 };

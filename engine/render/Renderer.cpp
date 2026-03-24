@@ -1,6 +1,8 @@
 #include "render/Renderer.h"
 #include <cmath>
-#include <SDL_ttf.h>
+#if REALLEAGUE_HAS_TTF
+#  include <SDL_ttf.h>
+#endif
 
 bool Renderer::init(const std::string& title, int width, int height) {
     this->width = width;
@@ -17,16 +19,20 @@ bool Renderer::init(const std::string& title, int width, int height) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-    if (TTF_Init() == -1) return false;
 
+#if REALLEAGUE_HAS_TTF
+    if (TTF_Init() == -1) return false;
+#endif
     return true;
 }
 
 void Renderer::shutdown() {
     if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
     if (window)   { SDL_DestroyWindow(window);   window   = nullptr; }
+#if REALLEAGUE_HAS_TTF
     if (font) { TTF_CloseFont(font); font = nullptr; }
     TTF_Quit();
+#endif
 }
 
 void Renderer::clear(int r, int g, int b) {
@@ -100,12 +106,18 @@ void Renderer::drawFogOverlay(int screenW, int screenH) {
 }
 
 bool Renderer::loadFont(const std::string& path, int size) {
+#if REALLEAGUE_HAS_TTF
     if (font) { TTF_CloseFont(font); font = nullptr; }
     font = TTF_OpenFont(path.c_str(), size);
     return font != nullptr;
+#else
+    (void)path; (void)size;
+    return false;
+#endif
 }
 
 void Renderer::drawText(const std::string& text, float x, float y, SDL_Color color) {
+#if REALLEAGUE_HAS_TTF
     if (!font) return;
     SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), color);
     if (!surf) return;
@@ -114,4 +126,7 @@ void Renderer::drawText(const std::string& text, float x, float y, SDL_Color col
     SDL_RenderTexture(renderer, tex, nullptr, &dst);
     SDL_DestroyTexture(tex);
     SDL_FreeSurface(surf);
+#else
+    (void)text; (void)x; (void)y; (void)color;
+#endif
 }
