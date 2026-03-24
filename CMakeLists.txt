@@ -29,6 +29,23 @@ elseif(SDL2TTF_FOUND)
     set(SDL_TTF_FOUND ON)
 endif()
 
+file(GLOB_RECURSE ENGINE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
+)
+file(GLOB_RECURSE GAME_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/game/*.cpp"
+)
+set(SRC_SOURCES
+    src/main.cpp
+    src/Game.cpp
+)
+
+add_executable(realLeague
+    ${SRC_SOURCES}
+    ${ENGINE_SOURCES}
+    ${GAME_SOURCES}
+)
+
 target_include_directories(realLeague PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/engine
@@ -40,6 +57,8 @@ if(SDL_TTF_FOUND)
     target_include_directories(realLeague PRIVATE ${SDL_TTF_INCLUDE_DIRS})
     target_link_libraries(realLeague PRIVATE ${SDL_TTF_LIBRARIES})
 endif()
+
+target_link_libraries(realLeague PRIVATE SDL3::SDL3)
 
 if(MSVC)
     target_compile_options(realLeague PRIVATE /W4)
