@@ -65,8 +65,38 @@ void RenderSystem::renderProjectiles(World& world, Renderer& renderer, float cam
     for (auto& [id, proj] : world.projectiles) {
         if (world.transforms.count(id) == 0) continue;
         const auto& tr = world.transforms[id];
-        renderer.setColor(255, 220, 0);
-        renderer.drawWorldCircle(tr.position.x, tr.position.y, 6.0f, camX, camY);
+        // Bright orange-yellow fireball with a larger glow ring
+        renderer.setColor(255, 140, 0, 200);
+        renderer.drawWorldCircle(tr.position.x, tr.position.y, 14.0f, camX, camY);
+        renderer.setColor(255, 220, 0, 255);
+        renderer.drawWorldCircle(tr.position.x, tr.position.y, 10.0f, camX, camY);
+        renderer.setColor(255, 255, 180, 255);
+        renderer.drawWorldCircle(tr.position.x, tr.position.y,  5.0f, camX, camY);
+    }
+}
+
+// ── Ability VFX ───────────────────────────────────────────────────────────────
+
+void RenderSystem::renderVfx(World& world, Renderer& renderer, float camX, float camY) {
+    for (auto& [id, vfx] : world.vfxComponents) {
+        float t     = (vfx.duration > 0.0f) ? (vfx.remaining / vfx.duration) : 0.0f;
+        int   alpha = static_cast<int>(t * 230.0f);
+
+        if (vfx.type == VfxComponent::Type::ExpandingRing) {
+            // Ring grows from 0 to maxRadius as t goes 1 → 0
+            float radius = vfx.maxRadius * (1.0f - t);
+            renderer.setColor(vfx.colorR, vfx.colorG, vfx.colorB, alpha);
+            renderer.drawWorldCircle(vfx.position.x, vfx.position.y, radius,       camX, camY);
+            renderer.drawWorldCircle(vfx.position.x, vfx.position.y, radius + 2.f, camX, camY);
+            renderer.drawWorldCircle(vfx.position.x, vfx.position.y, radius + 4.f, camX, camY);
+        } else {
+            // Solid flash: fixed radius that fades out
+            renderer.setColor(vfx.colorR, vfx.colorG, vfx.colorB, alpha);
+            float step = std::max(6.0f, vfx.maxRadius / 5.0f);
+            for (float r = vfx.maxRadius; r > 0.0f; r -= step) {
+                renderer.drawWorldCircle(vfx.position.x, vfx.position.y, r, camX, camY);
+            }
+        }
     }
 }
 
@@ -169,6 +199,7 @@ void RenderSystem::render(World& world, Renderer& renderer, Map& map,
     renderEntities(world, renderer, camX, camY);
     renderHealthBars(world, renderer, camX, camY);
     renderProjectiles(world, renderer, camX, camY);
+    renderVfx(world, renderer, camX, camY);
 
     // Hover and attack-target highlights (drawn after fog so always visible)
     renderHighlights(world, renderer, camX, camY);

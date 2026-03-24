@@ -34,6 +34,7 @@ public:
             minions.erase(id);
             collisions.erase(id);
             respawnComponents.erase(id);
+            vfxComponents.erase(id);
         }
         toDestroy.clear();
     }
@@ -53,6 +54,7 @@ public:
     std::unordered_map<EntityID, MinionComponent> minions;
     std::unordered_map<EntityID, CollisionComponent> collisions;
     std::unordered_map<EntityID, RespawnComponent> respawnComponents;
+    std::unordered_map<EntityID, VfxComponent> vfxComponents;
 
     std::vector<EntityID> entities;
     std::vector<EntityID> toDestroy;
