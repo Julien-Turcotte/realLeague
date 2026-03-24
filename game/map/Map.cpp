@@ -106,48 +106,63 @@ bool Map::isObstacle(const Vec2& pos, float radius) const {
 // ── Rendering ────────────────────────────────────────────────────────────────
 
 void Map::render(Renderer& renderer, float camX, float camY) {
-    // Background (grass)
-    renderer.setColor(60, 120, 60);
-    renderer.drawWorldRect(0, 0, static_cast<float>(MAP_WIDTH), static_cast<float>(MAP_HEIGHT), camX, camY);
+    const float W = static_cast<float>(MAP_WIDTH);
+    const float H = static_cast<float>(MAP_HEIGHT);
 
-    // River band (diagonal blue-gray strip)
-    renderer.setColor(60, 80, 120, 180);
-    for (int i = -30; i <= 30; ++i) {
-        float offset = static_cast<float>(i) * 5.0f;
-        renderer.drawWorldLine(offset, static_cast<float>(MAP_HEIGHT) + offset,
-                               static_cast<float>(MAP_WIDTH) + offset, offset,
-                               camX, camY);
+    // ── Background (dark jungle) ──────────────────────────────────────────────
+    renderer.setColor(22, 38, 28);
+    renderer.drawWorldRect(0, 0, W, H, camX, camY);
+
+    // ── River (diagonal teal-blue band, ~240 units wide) ─────────────────────
+    renderer.setColor(28, 52, 75, 210);
+    for (int i = -15; i <= 15; ++i) {
+        float off = static_cast<float>(i) * 8.0f;
+        renderer.drawWorldLine(off, H + off, W + off, off, camX, camY);
     }
 
-    // Lane paths (gray rectangles approximated by thick lines)
-    renderer.setColor(120, 110, 90);
-    // Top lane (vertical then horizontal)
-    renderer.drawWorldRect(160.0f, 160.0f, 80.0f, static_cast<float>(MAP_HEIGHT) - 320.0f, camX, camY);
-    renderer.drawWorldRect(160.0f, 160.0f, static_cast<float>(MAP_WIDTH) - 320.0f, 80.0f, camX, camY);
-    // Bot lane
-    renderer.drawWorldRect(160.0f, static_cast<float>(MAP_HEIGHT) - 240.0f,
-                           static_cast<float>(MAP_WIDTH) - 320.0f, 80.0f, camX, camY);
-    renderer.drawWorldRect(static_cast<float>(MAP_WIDTH) - 240.0f, 160.0f,
-                           80.0f, static_cast<float>(MAP_HEIGHT) - 320.0f, camX, camY);
-    // Mid lane (diagonal – drawn as a series of small rects)
-    for (int i = 0; i < 20; ++i) {
-        float t  = static_cast<float>(i) / 20.0f;
-        float t2 = static_cast<float>(i + 1) / 20.0f;
-        float x1 = t  * static_cast<float>(MAP_WIDTH);
-        float y1 = static_cast<float>(MAP_HEIGHT) - t  * static_cast<float>(MAP_HEIGHT);
-        float x2 = t2 * static_cast<float>(MAP_WIDTH);
-        float y2 = static_cast<float>(MAP_HEIGHT) - t2 * static_cast<float>(MAP_HEIGHT);
-        renderer.setColor(120, 110, 90);
-        renderer.drawWorldLine(x1, y1, x2, y2, camX, camY);
+    // ── Lane paths (muted stone / sand) ──────────────────────────────────────
+    renderer.setColor(88, 80, 62);
+    // Top lane – vertical left segment
+    renderer.drawWorldRect(150.0f, 150.0f, 90.0f, H - 300.0f, camX, camY);
+    // Top lane – horizontal top segment
+    renderer.drawWorldRect(150.0f, 150.0f, W - 300.0f, 90.0f, camX, camY);
+    // Bot lane – horizontal bottom segment
+    renderer.drawWorldRect(150.0f, H - 240.0f, W - 300.0f, 90.0f, camX, camY);
+    // Bot lane – vertical right segment
+    renderer.drawWorldRect(W - 240.0f, 150.0f, 90.0f, H - 300.0f, camX, camY);
+
+    // Mid lane (diagonal, drawn as a band of parallel lines)
+    renderer.setColor(88, 80, 62);
+    for (int i = 0; i < 25; ++i) {
+        float t  = static_cast<float>(i) / 25.0f;
+        float t2 = static_cast<float>(i + 1) / 25.0f;
+        float x1 = t  * W, y1 = H - t  * H;
+        float x2 = t2 * W, y2 = H - t2 * H;
+        for (int k = -4; k <= 4; ++k) {
+            float d = static_cast<float>(k) * 6.0f;
+            renderer.drawWorldLine(x1 + d, y1 - d, x2 + d, y2 - d, camX, camY);
+        }
     }
 
-    // Nexus circles
-    renderer.setColor(100, 150, 255);
+    // ── Blue base zone (bottom-left, subtle highlight) ────────────────────────
+    renderer.setColor(18, 28, 50, 160);
+    renderer.drawWorldRect(0.0f, H - 600.0f, 600.0f, 600.0f, camX, camY);
+
+    // ── Red base zone (top-right, subtle highlight) ───────────────────────────
+    renderer.setColor(50, 18, 18, 160);
+    renderer.drawWorldRect(W - 600.0f, 0.0f, 600.0f, 600.0f, camX, camY);
+
+    // ── Nexus circles (triple ring) ───────────────────────────────────────────
+    renderer.setColor(60, 130, 210);
+    renderer.drawWorldCircle(blueNexus.x, blueNexus.y, 70.0f, camX, camY);
     renderer.drawWorldCircle(blueNexus.x, blueNexus.y, 60.0f, camX, camY);
-    renderer.setColor(255, 100, 100);
-    renderer.drawWorldCircle(redNexus.x, redNexus.y, 60.0f, camX, camY);
+    renderer.drawWorldCircle(blueNexus.x, blueNexus.y, 50.0f, camX, camY);
+    renderer.setColor(210, 60, 60);
+    renderer.drawWorldCircle(redNexus.x,  redNexus.y,  70.0f, camX, camY);
+    renderer.drawWorldCircle(redNexus.x,  redNexus.y,  60.0f, camX, camY);
+    renderer.drawWorldCircle(redNexus.x,  redNexus.y,  50.0f, camX, camY);
 
-    // Map border
-    renderer.setColor(80, 60, 30);
-    renderer.drawWorldRect(0, 0, static_cast<float>(MAP_WIDTH), static_cast<float>(MAP_HEIGHT), camX, camY, false);
+    // ── Map border ────────────────────────────────────────────────────────────
+    renderer.setColor(40, 28, 15);
+    renderer.drawWorldRect(0, 0, W, H, camX, camY, false);
 }
