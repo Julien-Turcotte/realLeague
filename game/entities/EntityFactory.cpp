@@ -95,3 +95,35 @@ EntityID EntityFactory::createFireball(World& world, const Vec2& pos, const Vec2
     world.projectiles[id] = proj;
     return id;
 }
+
+EntityID EntityFactory::createVfxRing(World& world, const Vec2& pos, float maxRadius,
+                                       float duration, int r, int g, int b) {
+    EntityID id = world.createEntity();
+    VfxComponent vfx;
+    vfx.type       = VfxComponent::Type::ExpandingRing;
+    vfx.position   = pos;
+    vfx.maxRadius  = maxRadius;
+    vfx.duration   = duration;
+    vfx.remaining  = duration;
+    vfx.colorR     = r;
+    vfx.colorG     = g;
+    vfx.colorB     = b;
+    world.vfxComponents[id] = vfx;
+    return id;
+}
+
+EntityID EntityFactory::createVfxFlash(World& world, const Vec2& pos, float radius,
+                                        float duration, int r, int g, int b) {
+    EntityID id = world.createEntity();
+    VfxComponent vfx;
+    vfx.type       = VfxComponent::Type::SolidFlash;
+    vfx.position   = pos;
+    vfx.maxRadius  = radius;
+    vfx.duration   = duration;
+    vfx.remaining  = duration;
+    vfx.colorR     = r;
+    vfx.colorG     = g;
+    vfx.colorB     = b;
+    world.vfxComponents[id] = vfx;
+    return id;
+}

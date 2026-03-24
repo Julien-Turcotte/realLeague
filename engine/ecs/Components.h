@@ -109,3 +109,15 @@ struct CollisionComponent {
     float radius = 15.0f;
     bool isStatic = false;
 };
+
+struct VfxComponent {
+    enum class Type { ExpandingRing, SolidFlash };
+    Type  type       = Type::ExpandingRing;
+    Vec2  position;
+    float maxRadius  = 100.0f;
+    float duration   = 0.5f;
+    float remaining  = 0.5f;
+    int   colorR     = 255;
+    int   colorG     = 255;
+    int   colorB     = 255;
+};
