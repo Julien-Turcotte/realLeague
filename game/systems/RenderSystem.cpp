@@ -119,8 +119,8 @@ void RenderSystem::renderFogOfWar(World& world, Renderer& renderer,
         const Vec2& pos = world.transforms[id].position;
         float vr = 300.0f; // visibility radius
 
-        // Draw a lighter filled circle (approximate with a rect for simplicity)
-        renderer.setColor(60, 120, 60, 255); // match map grass color
+        // Draw a filled circle to reveal the map (match new dark jungle background)
+        renderer.setColor(22, 38, 28, 255); // match map jungle color
         float sx = pos.x - camX;
         float sy = pos.y - camY;
         // Draw filled circle using concentric horizontal lines
