@@ -8,4 +8,5 @@ public:
     void playSound(const std::string& name) { (void)name; }
     void playMusic(const std::string& name) { (void)name; }
     void stopMusic() {}
+    void playFireballSound() { /* stub: play fireball sound */ }
 };

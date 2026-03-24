@@ -50,6 +50,8 @@ void AbilitySystem::fireAbility(World& world, int slot, EntityID champion, const
         Vec2 dir    = targetPos - origin;
         int team    = world.teamComponents.count(champion) ? world.teamComponents[champion].teamId : 0;
         EntityFactory::createFireball(world, origin, dir, 80.0f, team, champion);
+        // Play fireball sound
+        // audio.playFireballSound(); // Needs access to AudioManager
     }
     // W, E, R – placeholder: just start the cooldown (already set above)
 }

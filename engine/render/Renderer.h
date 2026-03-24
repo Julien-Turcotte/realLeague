@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include "Vec2.h"
+#include <SDL3_ttf/SDL_ttf.h>
 
 class Renderer {
 public:
@@ -27,11 +28,15 @@ public:
     int getWidth() const { return width; }
     int getHeight() const { return height; }
 
+    bool loadFont(const std::string& path, int size);
+    void drawText(const std::string& text, float x, float y, SDL_Color color);
+
 private:
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     int width = 1280;
     int height = 720;
+    TTF_Font* font = nullptr;
 
     void drawCirclePoints(int cx, int cy, int x, int y);
 };

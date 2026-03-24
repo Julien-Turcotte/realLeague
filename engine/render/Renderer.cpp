@@ -1,5 +1,6 @@
 #include "render/Renderer.h"
 #include <cmath>
+#include <SDL_ttf.h>
 
 bool Renderer::init(const std::string& title, int width, int height) {
     this->width = width;
@@ -16,12 +17,16 @@ bool Renderer::init(const std::string& title, int width, int height) {
     }
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    if (TTF_Init() == -1) return false;
+
     return true;
 }
 
 void Renderer::shutdown() {
     if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
     if (window)   { SDL_DestroyWindow(window);   window   = nullptr; }
+    if (font) { TTF_CloseFont(font); font = nullptr; }
+    TTF_Quit();
 }
 
 void Renderer::clear(int r, int g, int b) {
@@ -92,4 +97,21 @@ void Renderer::drawFogOverlay(int screenW, int screenH) {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 160);
     SDL_FRect full{0, 0, static_cast<float>(screenW), static_cast<float>(screenH)};
     SDL_RenderFillRect(renderer, &full);
+}
+
+bool Renderer::loadFont(const std::string& path, int size) {
+    if (font) { TTF_CloseFont(font); font = nullptr; }
+    font = TTF_OpenFont(path.c_str(), size);
+    return font != nullptr;
+}
+
+void Renderer::drawText(const std::string& text, float x, float y, SDL_Color color) {
+    if (!font) return;
+    SDL_Surface* surf = TTF_RenderText_Blended(font, text.c_str(), color);
+    if (!surf) return;
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_FRect dst = {x, y, static_cast<float>(surf->w), static_cast<float>(surf->h)};
+    SDL_RenderTexture(renderer, tex, nullptr, &dst);
+    SDL_DestroyTexture(tex);
+    SDL_FreeSurface(surf);
 }

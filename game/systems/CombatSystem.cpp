@@ -15,6 +15,8 @@ void CombatSystem::dealDamage(World& world, EntityID target, float rawDamage) {
     if (hp.current <= 0.0f) {
         hp.current = 0.0f;
         hp.isDead  = true;
+        // Award gold and increment kill/death counters
+        // (Needs access to Game's playerGold, playerKills, playerDeaths)
     }
 }
 

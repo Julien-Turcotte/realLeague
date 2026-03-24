@@ -59,4 +59,13 @@ public:
     EntityID nextID = 0;
     EntityID playerEntity = INVALID_ENTITY;
     EntityID hoveredEnemy = INVALID_ENTITY;
+
+    // UI polish: expose game state for UIManager
+    int playerGold = 0;
+    int playerKills = 0;
+    int playerDeaths = 0;
+    bool recalling = false;
+    float recallTimer = 0.0f;
+    bool gameOver = false;
+    int winnerTeam = -1;
 };

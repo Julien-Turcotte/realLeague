@@ -15,11 +15,26 @@ bool Game::init() {
         return false;
     }
 
+    if (!renderer.loadFont("assets/textures/Roboto-Bold.ttf", 20)) {
+        std::cerr << "Failed to load font\n";
+        return false;
+    }
+
     audio.init();
     map.init();
     pathfinding.init(MAP_WIDTH, MAP_HEIGHT, 100);
 
     spawnInitialEntities();
+    playerGold = 0;
+    playerKills = 0;
+    playerDeaths = 0;
+    pingActive = false;
+    recalling = false;
+    recallTimer = 0.0f;
+    paused = false;
+    gameOver = false;
+    winnerTeam = -1;
+
     return true;
 }
 
@@ -69,13 +84,54 @@ void Game::handleInput() {
         return;
     }
 
-    // Update hovered enemy every frame based on current mouse position
-    if (world.playerEntity != INVALID_ENTITY &&
-        world.teamComponents.count(world.playerEntity)) {
+    // Pause feature
+    if (input.isKeyJustPressed(SDL_SCANCODE_P)) {
+        paused = !paused;
+    }
+    if (paused) return;
+
+    // Recall feature (B key)
+    if (!recalling && input.isKeyJustPressed(SDL_SCANCODE_B)) {
+        recalling = true;
+        recallTimer = 3.0f;
+    }
+
+    // Sprint feature (Shift key)
+    if (world.playerEntity != INVALID_ENTITY && world.velocities.count(world.playerEntity)) {
+        auto& vel = world.velocities[world.playerEntity];
+        if (input.isKeyDown(SDL_SCANCODE_LSHIFT) || input.isKeyDown(SDL_SCANCODE_RSHIFT)) {
+            vel.speed = 250.0f;
+        } else {
+            vel.speed = 150.0f;
+        }
+    }
+
+    // Minimap click-to-move
+    Vec2 mouse = input.getMousePosition();
+    int screenW = renderer.getWidth();
+    int screenH = renderer.getHeight();
+    float mmW = 200.0f, mmH = 200.0f;
+    float mmX = static_cast<float>(screenW) - mmW - 10.0f;
+    float mmY = static_cast<float>(screenH) - mmH - 10.0f;
+    if (input.isMouseButtonJustPressed(SDL_BUTTON_LEFT) &&
+        mouse.x >= mmX && mouse.x <= mmX + mmW &&
+        mouse.y >= mmY && mouse.y <= mmY + mmH) {
+        float wx = (mouse.x - mmX) / mmW * MAP_WIDTH;
+        float wy = (mouse.y - mmY) / mmH * MAP_HEIGHT;
+        if (world.playerEntity != INVALID_ENTITY && world.playerControlled.count(world.playerEntity)) {
+            auto& pc = world.playerControlled[world.playerEntity];
+            pc.moveTarget = {wx, wy};
+            pc.hasTarget = true;
+        }
+    }
+
+    // Ping system (Alt+click)
+    if ((input.isKeyDown(SDL_SCANCODE_LALT) || input.isKeyDown(SDL_SCANCODE_RALT)) &&
+        input.isMouseButtonJustPressed(SDL_BUTTON_LEFT)) {
         Vec2 mouseScreen = input.getMousePosition();
-        Vec2 worldPos{mouseScreen.x + camX, mouseScreen.y + camY};
-        int myTeam = world.teamComponents[world.playerEntity].teamId;
-        world.hoveredEnemy = findEnemyAt(worldPos, myTeam);
+        pingLocation = {mouseScreen.x + camX, mouseScreen.y + camY};
+        pingActive = true;
+        pingTimer = 2.0f;
     }
 
     // Right-click → attack enemy or move player
@@ -119,6 +175,52 @@ EntityID Game::findEnemyAt(const Vec2& worldPos, int myTeam) {
 }
 
 void Game::update(float dt) {
+    if (paused || gameOver) return;
+
+    // Health regen for champions
+    for (auto& [id, champ] : world.champions) {
+        if (world.healths.count(id) && !world.healths[id].isDead) {
+            auto& hp = world.healths[id];
+            hp.current = std::min(hp.max, hp.current + 5.0f * dt);
+        }
+    }
+
+    // Recall logic
+    if (recalling && world.playerEntity != INVALID_ENTITY && world.healths.count(world.playerEntity)) {
+        recallTimer -= dt;
+        if (recallTimer <= 0.0f) {
+            recalling = false;
+            // Teleport to spawn
+            if (world.transforms.count(world.playerEntity) && world.champions.count(world.playerEntity)) {
+                world.transforms[world.playerEntity].position = world.champions[world.playerEntity].spawnPosition;
+            }
+        }
+    }
+    if (recalling && (input.isKeyDown(SDL_SCANCODE_W) || input.isKeyDown(SDL_SCANCODE_A) ||
+                      input.isKeyDown(SDL_SCANCODE_S) || input.isKeyDown(SDL_SCANCODE_D) ||
+                      input.isMouseButtonDown(SDL_BUTTON_RIGHT))) {
+        recalling = false; // Cancel recall on movement
+    }
+
+    // Ping timer
+    if (pingActive) {
+        pingTimer -= dt;
+        if (pingTimer <= 0.0f) pingActive = false;
+    }
+
+    // Game over check (nexus destroyed)
+    for (EntityID id : world.entities) {
+        if (world.champions.count(id) == 0 && world.healths.count(id) &&
+            (world.transforms.count(id) && (
+                (world.transforms[id].position - Vec2{200.0f, 2800.0f}).length() < 70.0f ||
+                (world.transforms[id].position - Vec2{2800.0f, 200.0f}).length() < 70.0f))) {
+            if (world.healths[id].isDead) {
+                gameOver = true;
+                winnerTeam = (world.transforms[id].position.x < 1000) ? 1 : 0;
+            }
+        }
+    }
+
     movementSystem.update(world, dt);
     aiSystem.update(world, map, dt);
     combatSystem.update(world, dt);
@@ -128,21 +230,42 @@ void Game::update(float dt) {
     world.flushDestroyQueue();
     updateCamera();
     if (moveIndicatorTime > 0.0f) moveIndicatorTime -= dt;
+
+    // Sync game state to world for UIManager
+    world.playerGold = playerGold;
+    world.playerKills = playerKills;
+    world.playerDeaths = playerDeaths;
+    world.recalling = recalling;
+    world.recallTimer = recallTimer;
+    world.gameOver = gameOver;
+    world.winnerTeam = winnerTeam;
 }
 
 void Game::render() {
     renderer.clear(20, 20, 20);
     renderSystem.render(world, renderer, map, ui, camX, camY);
 
-    // Right-click move indicator animation (drawn on top of everything)
-    if (moveIndicatorTime > 0.0f) {
-        float progress = 1.0f - (moveIndicatorTime / MOVE_INDICATOR_DURATION);
-        float radius   = MOVE_INDICATOR_START_RADIUS
-                         - progress * (MOVE_INDICATOR_START_RADIUS - MOVE_INDICATOR_END_RADIUS);
-        int   alpha    = static_cast<int>((moveIndicatorTime / MOVE_INDICATOR_DURATION) * 230.0f);
-        renderer.setColor(50, 255, 100, alpha);
-        renderer.drawWorldCircle(moveIndicatorPos.x, moveIndicatorPos.y, radius,       camX, camY);
-        renderer.drawWorldCircle(moveIndicatorPos.x, moveIndicatorPos.y, radius - 3.0f, camX, camY);
+    // Ping indicator
+    if (pingActive) {
+        renderer.setColor(255, 255, 0, 180);
+        renderer.drawWorldCircle(pingLocation.x, pingLocation.y, 32.0f, camX, camY);
+    }
+
+    // Recall indicator
+    if (recalling && world.playerEntity != INVALID_ENTITY && world.transforms.count(world.playerEntity)) {
+        auto& pos = world.transforms[world.playerEntity].position;
+        renderer.setColor(0, 200, 255, 180);
+        renderer.drawWorldCircle(pos.x, pos.y, 32.0f, camX, camY);
+    }
+
+    // Game over screen
+    if (gameOver) {
+        renderer.setColor(0, 0, 0, 200);
+        renderer.drawRect(0, 0, renderer.getWidth(), renderer.getHeight());
+        renderer.setColor(255, 255, 255, 255);
+        // No font: just draw a white rectangle as a placeholder
+        renderer.drawRect(renderer.getWidth()/2-150, renderer.getHeight()/2-40, 300, 80, false);
+        // Could add SDL_ttf for text, but not in this minimal example
     }
 
     renderer.present();

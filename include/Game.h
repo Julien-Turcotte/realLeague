@@ -53,6 +53,17 @@ private:
     float camX   = 0.0f;
     float camY   = 0.0f;
     bool  running = false;
+    bool paused = false;
+    int playerGold = 0;
+    int playerKills = 0;
+    int playerDeaths = 0;
+    Vec2 pingLocation;
+    float pingTimer = 0.0f;
+    bool pingActive = false;
+    bool recalling = false;
+    float recallTimer = 0.0f;
+    bool gameOver = false;
+    int winnerTeam = -1;
 
     // Right-click move indicator animation
     Vec2  moveIndicatorPos;

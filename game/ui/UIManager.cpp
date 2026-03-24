@@ -22,29 +22,41 @@ void UIManager::renderAbilityBar(World& world, EntityID player,
         float x = startX + static_cast<float>(i) * (boxW + spacing);
         float y = startY;
 
-        // Box background
-        renderer.setColor(50, 50, 50, 220);
+        // Shadow
+        renderer.setColor(0, 0, 0, 120);
+        renderer.drawRect(x + 3, y + 3, boxW, boxH);
+
+        // Box background (gradient effect by layering)
+        renderer.setColor(60, 60, 60, 240);
         renderer.drawRect(x, y, boxW, boxH);
+        renderer.setColor(80, 80, 80, 180);
+        renderer.drawRect(x + 2, y + 2, boxW - 4, boxH - 4);
 
         // Ability icon (colored square)
         int iconColors[4][3] = {{200,50,50},{50,200,50},{50,50,200},{200,180,0}};
-        renderer.setColor(iconColors[i][0], iconColors[i][1], iconColors[i][2], 200);
-        renderer.drawRect(x + 5, y + 5, boxW - 10, boxH - 10);
+        renderer.setColor(iconColors[i][0], iconColors[i][1], iconColors[i][2], 220);
+        renderer.drawRect(x + 8, y + 8, boxW - 16, boxH - 16);
 
-        // Cooldown overlay
+        // Cooldown overlay (semi-transparent dark overlay)
         float cd    = champ.abilityCooldowns[i];
         float maxCd = champ.abilityMaxCooldowns[i];
         if (cd > 0.0f && maxCd > 0.0f) {
             float pct = cd / maxCd;
             renderer.setColor(0, 0, 0, 180);
-            renderer.drawRect(x + 5, y + 5, boxW - 10, (boxH - 10) * pct);
+            renderer.drawRect(x + 8, y + 8 + (boxH - 16) * (1.0f - pct), boxW - 16, (boxH - 16) * pct);
         }
 
-        // Box border
-        renderer.setColor(200, 200, 200, 255);
+        // Box border (thicker, more visible)
+        renderer.setColor(220, 220, 220, 255);
         renderer.drawRect(x, y, boxW, boxH, false);
+        renderer.setColor(120, 120, 120, 255);
+        renderer.drawRect(x - 1, y - 1, boxW + 2, boxH + 2, false);
 
-        (void)labels[i]; // label rendering would require a font; skipped for now
+        // Tooltip (simple: highlight Q with a different border)
+        if (i == 0) {
+            renderer.setColor(255, 255, 100, 180);
+            renderer.drawRect(x - 2, y - 2, boxW + 4, boxH + 4, false);
+        }
     }
 }
 
@@ -56,8 +68,12 @@ void UIManager::renderMinimap(World& world, Renderer& renderer, int screenW, int
     float mmX = static_cast<float>(screenW) - mmW - 10.0f;
     float mmY = static_cast<float>(screenH) - mmH - 10.0f;
 
+    // Shadow
+    renderer.setColor(0, 0, 0, 120);
+    renderer.drawRect(mmX + 4, mmY + 4, mmW, mmH);
+
     // Background
-    renderer.setColor(20, 50, 20, 220);
+    renderer.setColor(30, 60, 30, 230);
     renderer.drawRect(mmX, mmY, mmW, mmH);
 
     // Entities
@@ -77,12 +93,14 @@ void UIManager::renderMinimap(World& world, Renderer& renderer, int screenW, int
         } else {
             renderer.setColor(200, 200, 200, 255);
         }
-        renderer.drawRect(px - 2, py - 2, 4.0f, 4.0f);
+        renderer.drawRect(px - 3, py - 3, 6.0f, 6.0f);
     }
 
-    // Minimap border
-    renderer.setColor(180, 180, 180, 255);
+    // Minimap border (thicker, more visible)
+    renderer.setColor(220, 220, 220, 255);
     renderer.drawRect(mmX, mmY, mmW, mmH, false);
+    renderer.setColor(80, 80, 80, 255);
+    renderer.drawRect(mmX - 2, mmY - 2, mmW + 4, mmH + 4, false);
 }
 
 // ── Level info ────────────────────────────────────────────────────────────────
@@ -92,7 +110,9 @@ void UIManager::renderLevelInfo(World& world, EntityID player, Renderer& rendere
     if (world.champions.count(player) == 0) return;
 
     int level = world.champions[player].level;
-    // Draw a simple level indicator box
+    // Draw a simple level indicator box with shadow
+    renderer.setColor(0, 0, 0, 120);
+    renderer.drawRect(13, 13, 120, 30);
     renderer.setColor(0, 0, 0, 180);
     renderer.drawRect(10, 10, 120, 30);
     renderer.setColor(255, 220, 50, 255);
@@ -162,6 +182,64 @@ void UIManager::renderRespawnTimer(World& world, EntityID player,
     }
 }
 
+// ── Gold ─────────────────────────────────────────────────────────────────────
+
+void UIManager::renderGold(World& world, int gold, Renderer& renderer, int screenW) {
+    // Shadow
+    renderer.setColor(0, 0, 0, 120);
+    renderer.drawRect(screenW - 143, 13, 120, 30);
+    renderer.setColor(255, 215, 0, 220);
+    renderer.drawRect(screenW - 140, 10, 120, 30);
+    renderer.setColor(255, 215, 0, 255);
+    renderer.drawRect(screenW - 140, 10, 120, 30, false);
+    // Draw gold amount as text
+    renderer.drawText("Gold: " + std::to_string(gold), screenW - 130, 15, SDL_Color{60, 40, 0, 255});
+}
+
+// ── Kill/Death ────────────────────────────────────────────────────────────────
+
+void UIManager::renderKillDeath(World& world, int kills, int deaths, Renderer& renderer, int screenW) {
+    // Shadow
+    renderer.setColor(0, 0, 0, 120);
+    renderer.drawRect(screenW/2 - 57, 13, 120, 30);
+    renderer.setColor(200, 200, 200, 220);
+    renderer.drawRect(screenW/2 - 60, 10, 120, 30);
+    renderer.setColor(255, 0, 0, 255);
+    renderer.drawRect(screenW/2 - 60, 10, 120, 30, false);
+    // Draw K/D as text
+    renderer.drawText("K: " + std::to_string(kills) + " / D: " + std::to_string(deaths),
+                      screenW/2 - 50, 15, SDL_Color{100, 0, 0, 255});
+}
+
+// ── Recall ─────────────────────────────────────────────────────────────────────
+
+void UIManager::renderRecall(World& world, bool recalling, float recallTimer, Renderer& renderer, int screenW, int screenH) {
+    if (!recalling) return;
+    // Shadow
+    renderer.setColor(0, 0, 0, 120);
+    renderer.drawRect(screenW/2 - 77, screenH - 97, 160, 30);
+    renderer.setColor(0, 200, 255, 180);
+    renderer.drawRect(screenW/2 - 80, screenH - 100, 160, 30);
+    renderer.setColor(0, 200, 255, 255);
+    renderer.drawRect(screenW/2 - 80, screenH - 100, 160 * (recallTimer/3.0f), 30);
+}
+
+// ── Game over ──────────────────────────────────────────────────────────────────
+
+void UIManager::renderGameOver(bool gameOver, int winnerTeam, Renderer& renderer, int screenW, int screenH) {
+    if (!gameOver) return;
+    renderer.setColor(0, 0, 0, 200);
+    renderer.drawRect(0, 0, screenW, screenH);
+    renderer.setColor(255, 255, 255, 255);
+    renderer.drawRect(screenW/2-150, screenH/2-40, 300, 80, false);
+    // Add a colored border for the winning team
+    if (winnerTeam == 0)
+        renderer.setColor(100, 200, 255, 255);
+    else
+        renderer.setColor(255, 100, 100, 255);
+    renderer.drawRect(screenW/2-155, screenH/2-45, 310, 90, false);
+}
+
 // ── Public entry ─────────────────────────────────────────────────────────────
 
 void UIManager::render(World& world, Renderer& renderer, int screenW, int screenH) {
@@ -169,4 +247,9 @@ void UIManager::render(World& world, Renderer& renderer, int screenW, int screen
     renderAbilityBar(world, world.playerEntity, renderer, screenW, screenH);
     renderMinimap(world, renderer, screenW, screenH);
     renderRespawnTimer(world, world.playerEntity, renderer, screenW, screenH);
+    // Polished UI: show gold, K/D, recall, game over overlays
+    renderGold(world, world.playerGold, renderer, screenW);
+    renderKillDeath(world, world.playerKills, world.playerDeaths, renderer, screenW);
+    renderRecall(world, world.recalling, world.recallTimer, renderer, screenW, screenH);
+    renderGameOver(world.gameOver, world.winnerTeam, renderer, screenW, screenH);
 }
