@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include <string>
 #include "Vec2.h"
-#include <SDL3_ttf/SDL_ttf.h>
+#include <SDL_ttf.h>
 
 class Renderer {
 public:
