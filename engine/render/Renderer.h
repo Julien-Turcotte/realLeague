@@ -19,6 +19,11 @@ public:
     void drawWorldCircle(float cx, float cy, float radius, float camX, float camY);
     void drawWorldLine(float x1, float y1, float x2, float y2, float camX, float camY);
 
+    // Draw a pre-built SDL_Texture centred at (worldX, worldY) scaled to w×h.
+    void drawWorldSprite(SDL_Texture* texture,
+                         float worldX, float worldY, float w, float h,
+                         float camX, float camY);
+
     // Fog of war overlay (drawn in screen space, no camera offset needed)
     void drawFogOverlay(int screenW, int screenH);
 
