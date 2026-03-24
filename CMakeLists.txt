@@ -43,6 +43,7 @@ target_include_directories(realLeague PRIVATE
 )
 
 if(SDL2TTF_FOUND)
+    target_include_directories(realLeague PRIVATE ${SDL2TTF_INCLUDE_DIRS})
     target_link_libraries(realLeague PRIVATE ${SDL2TTF_LIBRARIES})
 endif()
 

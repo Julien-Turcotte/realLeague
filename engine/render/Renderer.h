@@ -3,14 +3,19 @@
 #include <string>
 #include "Vec2.h"
 
-#if __has_include(<SDL_ttf.h>)
+#if defined(__has_include)
+#  if __has_include(<SDL_ttf.h>)
+#    include <SDL_ttf.h>
+#    define REALLEAGUE_HAS_TTF 1
+#  elif __has_include(<SDL3_ttf/SDL_ttf.h>)
+#    include <SDL3_ttf/SDL_ttf.h>
+#    define REALLEAGUE_HAS_TTF 1
+#  else
+#    define REALLEAGUE_HAS_TTF 0
+#  endif
+#else
 #  include <SDL_ttf.h>
 #  define REALLEAGUE_HAS_TTF 1
-#elif __has_include(<SDL3_ttf/SDL_ttf.h>)
-#  include <SDL3_ttf/SDL_ttf.h>
-#  define REALLEAGUE_HAS_TTF 1
-#else
-#  define REALLEAGUE_HAS_TTF 0
 #endif
 
 class Renderer {
@@ -48,7 +53,7 @@ private:
 #if REALLEAGUE_HAS_TTF
     TTF_Font* font = nullptr;
 #else
-    void* font = nullptr; // dummy member to keep class layout; unused
+    void* font = nullptr; // no TTF support
 #endif
     void drawCirclePoints(int cx, int cy, int x, int y);
 };

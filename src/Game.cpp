@@ -15,10 +15,12 @@ bool Game::init() {
         return false;
     }
 
+#if REALLEAGUE_HAS_TTF
     if (!renderer.loadFont("assets/textures/Roboto-Bold.ttf", 20)) {
         std::cerr << "Failed to load font\n";
         return false;
     }
+#endif
 
     audio.init();
     map.init();
