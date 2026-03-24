@@ -1,8 +1,6 @@
 #include "render/Renderer.h"
+#include "render/ttf_compat.h"
 #include <cmath>
-#if REALLEAGUE_HAS_TTF
-#  include <SDL_ttf.h>
-#endif
 
 bool Renderer::init(const std::string& title, int width, int height) {
     this->width = width;

@@ -15,36 +15,30 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL3)
 
 find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL3TTF QUIET SDL3_ttf)
 pkg_check_modules(SDL2TTF QUIET SDL2_ttf)
 
-file(GLOB_RECURSE ENGINE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp"
-)
-file(GLOB_RECURSE GAME_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/game/*.cpp"
-)
-set(SRC_SOURCES
-    src/main.cpp
-    src/Game.cpp
-)
-
-add_executable(realLeague
-    ${SRC_SOURCES}
-    ${ENGINE_SOURCES}
-    ${GAME_SOURCES}
-)
+set(SDL_TTF_FOUND OFF)
+if(SDL3TTF_FOUND)
+    set(SDL_TTF_INCLUDE_DIRS ${SDL3TTF_INCLUDE_DIRS})
+    set(SDL_TTF_LIBRARIES    ${SDL3TTF_LIBRARIES})
+    set(SDL_TTF_FOUND ON)
+elseif(SDL2TTF_FOUND)
+    set(SDL_TTF_INCLUDE_DIRS ${SDL2TTF_INCLUDE_DIRS})
+    set(SDL_TTF_LIBRARIES    ${SDL2TTF_LIBRARIES})
+    set(SDL_TTF_FOUND ON)
+endif()
 
 target_include_directories(realLeague PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/engine
     ${CMAKE_CURRENT_SOURCE_DIR}/game
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${SDL2TTF_INCLUDE_DIRS}
 )
 
-if(SDL2TTF_FOUND)
-    target_include_directories(realLeague PRIVATE ${SDL2TTF_INCLUDE_DIRS})
-    target_link_libraries(realLeague PRIVATE ${SDL2TTF_LIBRARIES})
+if(SDL_TTF_FOUND)
+    target_include_directories(realLeague PRIVATE ${SDL_TTF_INCLUDE_DIRS})
+    target_link_libraries(realLeague PRIVATE ${SDL_TTF_LIBRARIES})
 endif()
 
 if(MSVC)
