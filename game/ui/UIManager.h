@@ -11,4 +11,6 @@ private:
                           int screenW, int screenH);
     void renderMinimap(World& world, Renderer& renderer, int screenW, int screenH);
     void renderLevelInfo(World& world, EntityID player, Renderer& renderer);
+    void renderRespawnTimer(World& world, EntityID player, Renderer& renderer,
+                            int screenW, int screenH);
 };

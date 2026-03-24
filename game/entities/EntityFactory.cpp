@@ -10,7 +10,9 @@ EntityID EntityFactory::createPlayerChampion(World& world, const Vec2& pos) {
     world.teamComponents[id]   = {0};
     world.collisions[id]       = {12.0f, false};
     world.playerControlled[id] = {};
-    world.champions[id]        = {};
+    ChampionComponent champ;
+    champ.spawnPosition = pos;
+    world.champions[id] = champ;
     return id;
 }
 
@@ -23,7 +25,9 @@ EntityID EntityFactory::createBotChampion(World& world, const Vec2& pos) {
     world.renderables[id]    = {255, 50, 50, 24.0f, 24.0f};
     world.teamComponents[id] = {1};
     world.collisions[id]     = {12.0f, false};
-    world.champions[id]      = {};
+    ChampionComponent champ;
+    champ.spawnPosition = pos;
+    world.champions[id]  = champ;
     AIComponent ai;
     ai.aggroRange   = 400.0f;
     ai.retreatHP    = 125.0f; // 25 % of 500
